@@ -1,0 +1,26 @@
+import { chromium } from 'playwright';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const url = 'file://' + resolve(__dirname, '..', 'index.html');
+const out = resolve(__dirname, 'review');
+const tag = process.argv[2] || 'r1';
+const errors = [];
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 420, height: 800 }, hasTouch: true, isMobile: true, locale: 'en-US' });
+const page = await ctx.newPage();
+page.on('pageerror', e => errors.push(String(e)));
+await page.goto(url);
+await page.waitForFunction(() => document.body.classList.contains('ready'));
+await page.waitForTimeout(500);
+await page.screenshot({ path: resolve(out, tag+'-en-start.png') });
+await page.waitForTimeout(1500);
+await page.screenshot({ path: resolve(out, tag+'-en-start2.png') });
+// daily modal & full collection
+await page.evaluate(() => { window.__grant(200000); for (let i = 0; i < 3000 && JSON.parse(window.render_game_to_text()).done < 9; i++) window.__autoplayTick();
+  document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); });
+await page.waitForTimeout(600);
+await page.screenshot({ path: resolve(out, tag+'-en-all9.png') });
+console.log(await page.evaluate(() => window.render_game_to_text()));
+console.log('errors', errors);
+await browser.close();

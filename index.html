@@ -1033,9 +1033,10 @@ function resize(){
   const land = W>H*1.25 && H<620;      // низкий альбомный экран: ужимаем арку и лоток
   hudH = land? 66 : 78;
   bottomH = land? 62 : 74;
-  trayH = Math.max(76, Math.min(land?86:116, H*0.135));
+  trayH = land ? Math.max(62, Math.min(86, H*0.18)) : Math.max(76, Math.min(116, H*0.135));
   const avail = H - hudH - bottomH - trayH - 12;
-  B = Math.max(168, Math.min(colW-56, Math.floor(avail/(land?1.18:1.4)), 540));
+  // нижняя граница поля не должна превышать доступную высоту (иначе на 640×360 лоток уезжает под кнопки)
+  B = Math.max(land?110:168, Math.min(colW-56, Math.floor(avail/(land?1.18:1.4)), 540));
   cs = B/N;
   archH = land? B*0.16 : B*0.34;
   const extra = Math.max(0, avail - B - archH);
@@ -1122,11 +1123,14 @@ function buildBg(){
   g.restore();
   // ── свинцовая решётка-разметка пустых ячеек (едва видимая направляющая)
   g.save();
-  g.strokeStyle='rgba(70,52,40,.3)'; g.lineWidth=1.2;
-  for(let i=1;i<N;i++){
-    g.beginPath(); g.moveTo(gridX+i*cs, gridY); g.lineTo(gridX+i*cs, gridY+B); g.stroke();
-    g.beginPath(); g.moveTo(gridX, gridY+i*cs); g.lineTo(gridX+B, gridY+i*cs); g.stroke();
-  }
+  // тёмная линия + светлый кант рядом: решётка читается и на светлом небе, и на тёмном силуэте города
+  [['rgba(70,52,40,.38)',1.4,0],['rgba(255,240,214,.26)',1,1.2]].forEach(([col,lw,o])=>{
+    g.strokeStyle=col; g.lineWidth=lw;
+    for(let i=1;i<N;i++){
+      g.beginPath(); g.moveTo(gridX+i*cs+o, gridY); g.lineTo(gridX+i*cs+o, gridY+B); g.stroke();
+      g.beginPath(); g.moveTo(gridX, gridY+i*cs+o); g.lineTo(gridX+B, gridY+i*cs+o); g.stroke();
+    }
+  });
   g.restore();
   // ── рама окна: толстый деревянный профиль + арка
   const fw=Math.max(9, cs*0.3);
@@ -1189,7 +1193,7 @@ function buildBg(){
   // ── боковой декор на широком экране: стеллажи, эскиз на стене, доска с инструментом
   const sideW=gridX-14;
   if(sideW>150){
-    const s=Math.min(1.6, sideW/150);
+    const s=Math.min(1.6, sideW/150, H/520);   // на низком экране декор не наезжает на HUD/гирлянду
     const lx=Math.max(70*s, sideW*0.5), rx=W-lx;
     drawShelf(g, lx, gridY+B*0.16, s);
     drawShelf(g, lx, gridY+B*0.52, s*0.92);
@@ -1801,7 +1805,8 @@ function frame(now){
 
   drawTray(t);
   // Бусинка сидит на левом краю рамы (лампа — на правом, сцена уравновешена)
-  const ms=Math.min(1.25, cs/34);
+  // Бусинка — житель сцены: крупнее таблички с именем, если над рамой есть место
+  const ms=Math.min(archH>cs*1.6 ? 1.7 : 1.25, cs/34);
   const mx=gridX+cs*0.38;
   drawMouse(ctx, mx, gridY-4, ms, t, mouseCheer);
   if(cs>34) drawNamePlate(mx+18*ms, gridY-42*ms, T("mouse"));
