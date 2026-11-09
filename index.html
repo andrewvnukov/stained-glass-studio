@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Витражная Мастерская</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<script>
+  // контекстное меню отключаем сразу при загрузке скрипта (MONETIZATION.md §8.5)
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  window.__inIframe = true;
+  try{ window.__inIframe = window.top !== window.self; }catch(e){ window.__inIframe = true; }
+  if(!window.__inIframe){ window.__noSDK = true; }
+  else {
+    var __sdkS = document.createElement('script');
+    __sdkS.src = 'https://yandex.ru/games/sdk/v2';
+    __sdkS.onerror = function(){ window.__noSDK = true; if(window.__onSdkScriptDone) window.__onSdkScriptDone(); };
+    __sdkS.onload  = function(){ if(window.__onSdkScriptDone) window.__onSdkScriptDone(); };
+    document.head.appendChild(__sdkS);
+  }
+</script>
+<script src="sfx.js"></script>
+<style>
+  :root{
+    /* ── Токены под тему «вечерняя витражная мастерская» ── */
+    --ink:#4A3426; --ink-soft:#9B8068; --line:#5C4330;
+    --paper:#FFF6E4;
+    --accent:#C96FA8; --accent-deep:#9E4A83;
+    --gold:#F0B93F; --mint:#79C48A; --lav:#9E8FE0;
+    --wood:#C08E5A; --wood-deep:#8E6038;
+    --bg:#C9A481;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);position:fixed;inset:0;background:var(--bg)}
+  body:not(.ready) #hud{visibility:hidden}
+  #cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+  #hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;
+       padding:calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+       max-width:620px;margin:0 auto}
+  .top{display:flex;gap:10px;align-items:flex-start}
+  /* чип осколков — бумажная плашка с иконкой-гранью */
+  .chip{background:var(--paper);border:2.5px solid var(--line);border-radius:16px;padding:5px 12px 5px 7px;
+        display:flex;gap:7px;align-items:center;box-shadow:0 3px 0 rgba(74,52,38,.28)}
+  .chip .ic{width:28px;height:28px;flex:none}
+  .chip .tx{display:flex;flex-direction:column;gap:1px}
+  .chip .v{font-weight:900;font-size:17px;line-height:1}
+  .chip .l{font-size:10px;font-weight:800;color:var(--ink-soft);letter-spacing:.3px}
+  /* второй индикатор — круглый медальон с кольцом прогресса витража (не второй чип) */
+  .medal{position:relative;width:56px;height:56px;border-radius:50%;flex:none;
+         border:2.5px solid var(--line);box-shadow:0 3px 0 rgba(74,52,38,.28);
+         background:conic-gradient(var(--gold) 0deg, rgba(92,67,48,.22) 0deg)}
+  .medal canvas{position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);
+         border-radius:50%;background:#2E2238}
+  .medal .mv{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);background:var(--paper);
+         border:2px solid var(--line);border-radius:99px;font-weight:900;font-size:10px;padding:0 5px;white-space:nowrap}
+  .spacer{flex:1}
+  /* нижний ряд: слева кластер круглых кнопок, справа — награда за ролик */
+  .bottom{display:flex;gap:9px;align-items:flex-end;pointer-events:auto}
+  .rbtn{width:46px;height:46px;border-radius:50%;background:var(--paper);border:2.5px solid var(--line);
+        box-shadow:0 3px 0 rgba(74,52,38,.28);display:flex;align-items:center;justify-content:center;
+        cursor:pointer;transition:transform .08s,box-shadow .08s;padding:0;flex:none;position:relative}
+  .rbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(74,52,38,.28)}
+  .rbtn svg{width:27px;height:27px;display:block}
+  .rbtn .langTxt{font-weight:900;font-size:13px;color:var(--ink);letter-spacing:.2px}
+  .rbtn .dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;
+        background:#F2735A;border:2px solid var(--line);display:none}
+  .rbtn.has .dot{display:block}
+  .abtn{background:linear-gradient(180deg,#F8D27A,#EBA93A);border:2.5px solid #A8731E;border-radius:18px;
+        padding:7px 14px;font-weight:900;font-size:15px;cursor:pointer;color:#53340C;
+        box-shadow:0 3px 0 rgba(74,52,38,.28);transition:transform .08s,box-shadow .08s;
+        display:flex;align-items:center;gap:9px;margin-left:auto}
+  .abtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(74,52,38,.28)}
+  .abtn .hic{width:28px;height:28px;flex:none}
+  .abtn .col{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+  .abtn .bt{font-size:15px;line-height:1.05}
+  .abtn .bs{font-size:11px;font-weight:800;opacity:.92;display:flex;align-items:center;gap:4px}
+  .abtn .bs svg{width:12px;height:12px}
+  .abtn.on{background:linear-gradient(180deg,#B9ECD0,#79C48A);border-color:#3F8A5A;color:#23502F}
+  /* ── модалки ── */
+  .modal{position:absolute;inset:0;background:rgba(36,26,42,.58);display:none;align-items:flex-end;
+         justify-content:center;pointer-events:auto;z-index:5}
+  .modal.open{display:flex}
+  .modal.center{align-items:center}
+  .sheet{position:relative;background:linear-gradient(180deg,#FFFBF0,#F6E7CB);width:100%;max-width:620px;
+         border:3px solid var(--line);border-bottom:none;border-radius:24px 24px 0 0;
+         padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:86%;
+         display:flex;flex-direction:column;box-shadow:0 -6px 24px rgba(36,26,42,.38)}
+  .scroll{overflow-y:auto;overflow-x:hidden}
+  .mTitle{font-weight:900;font-size:20px;text-align:center;margin:2px 44px 4px;color:var(--ink)}
+  .mSub{font-weight:800;font-size:12.5px;text-align:center;color:var(--ink-soft);margin:0 20px 12px}
+  .mClose{position:absolute;top:10px;right:12px;width:38px;height:38px;border-radius:50%;z-index:2;
+          background:var(--paper);border:2.5px solid var(--line);font-size:21px;font-weight:900;
+          color:var(--ink);cursor:pointer;box-shadow:0 3px 0 rgba(74,52,38,.28)}
+  /* галерея — сетка карточек-витражей (не список-строки, как в магазинах прошлых игр) */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .pcard{background:#FFF8E8;border:2.5px solid var(--line);border-radius:16px;padding:7px 5px 6px;
+         text-align:center;box-shadow:0 2px 0 rgba(74,52,38,.18)}
+  .pcard canvas{width:100%;height:76px;display:block;border-radius:10px}
+  .pcard .nm{font-weight:900;font-size:12.5px;margin-top:4px;line-height:1.1}
+  .pcard .ds{font-size:10.5px;font-weight:800;color:var(--ink-soft)}
+  .pcard.locked{opacity:.62;background:#EFE4CE}
+  .pcard.locked .ds{color:#A8743A}
+  /* мастерская — строки инструментов */
+  .row{display:flex;align-items:center;gap:10px;background:#FFF8E8;border:2.5px solid var(--line);
+       border-radius:16px;padding:8px 10px;margin-bottom:9px;box-shadow:0 2px 0 rgba(74,52,38,.18)}
+  .row canvas{width:56px;height:52px;flex:none;background:linear-gradient(180deg,#F3E2C4,#E2C79C);
+       border:2px solid var(--line);border-radius:12px}
+  .row .info{flex:1;min-width:0}
+  .row .nm{font-weight:900;font-size:15px;line-height:1.1}
+  .row .ds{font-size:11.5px;font-weight:800;color:var(--ink-soft);margin-top:2px}
+  .row .lv{display:flex;gap:3px;margin-top:4px}
+  .row .lv i{width:12px;height:7px;border-radius:2px;border:1.5px solid var(--line);background:#E6D7BC}
+  .row .lv i.f{background:var(--gold)}
+  .buy{border:2.5px solid var(--accent-deep);background:var(--accent);color:#fff;font-weight:900;
+       font-size:13px;padding:8px 12px;border-radius:12px;cursor:pointer;white-space:nowrap;
+       box-shadow:0 2px 0 rgba(74,52,38,.25);flex:none;display:flex;align-items:center;gap:5px}
+  .buy:active{transform:translateY(1px)}
+  .buy svg{width:15px;height:15px}
+  .buy.can-not{background:#CFC7B4;border-color:#B3AB98;color:#7C7462}
+  .buy.owned{background:var(--mint);border-color:#4E8F5E}
+  /* центральные карточки (витраж готов / офлайн / серия / тупик) */
+  .cardBox{position:relative;width:min(92%,382px);background:linear-gradient(180deg,#FFFBF0,#F6E7CB);
+         border:3px solid var(--line);border-radius:24px;padding:18px 16px 16px;text-align:center;
+         box-shadow:0 8px 0 rgba(74,52,38,.25),0 12px 30px rgba(36,26,42,.38)}
+  .cardBox .big{font-weight:900;font-size:30px;color:var(--ink);margin:6px 0 2px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .cardBox .big svg{width:32px;height:32px}
+  .cardBox .note{font-weight:800;font-size:13px;color:var(--ink-soft);min-height:18px}
+  .cardBox .hero{width:116px;height:132px;display:block;margin:4px auto 2px}
+  .btns{display:flex;gap:10px;margin-top:14px}
+  .btns button{flex:1;border:2.5px solid var(--line);border-radius:14px;padding:11px 6px;font-weight:900;font-size:15px;
+        cursor:pointer;box-shadow:0 3px 0 rgba(74,52,38,.28);display:flex;flex-direction:column;align-items:center;gap:1px}
+  .btns button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(74,52,38,.28)}
+  .btns .take{background:var(--paper);color:var(--ink)}
+  .btns .adx{background:linear-gradient(180deg,#DCA9CF,var(--accent));border-color:var(--accent-deep);color:#fff}
+  .btns .adx .s{font-size:11px;font-weight:800;opacity:.95;display:flex;align-items:center;gap:3px}
+  .btns .adx svg{width:11px;height:11px}
+  .lines{margin:10px 0 0;text-align:left}
+  .lines .ln{display:flex;align-items:center;gap:8px;padding:4px 6px;border-bottom:1.5px dashed rgba(92,67,48,.25);font-weight:800;font-size:14px}
+  .lines .ln canvas{width:34px;height:38px;flex:none}
+  .lines .ln .q{margin-left:auto;font-weight:900;color:#3E8A4E}
+  .days{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+  .day{background:#FFF8E8;border:2.5px solid var(--line);border-radius:12px;padding:6px 2px 5px;font-weight:900;font-size:12px;color:var(--ink)}
+  .day .dn{font-size:10px;color:var(--ink-soft);font-weight:800}
+  .day .dv{font-size:13px}
+  .day .dh{font-size:10px;color:#A8731E;font-weight:900}
+  .day.done{background:#E3EFD6;opacity:.75}
+  .day.now{background:linear-gradient(180deg,#FFE7A6,#F7C766);transform:translateY(-2px);box-shadow:0 3px 0 rgba(74,52,38,.25)}
+  .day.big{grid-column:span 2}
+  #toast{position:absolute;left:50%;bottom:104px;transform:translateX(-50%) translateY(20px);
+         background:var(--ink);color:#fff;font-weight:800;font-size:14px;padding:9px 16px;border-radius:99px;
+         opacity:0;transition:.25s;pointer-events:none;z-index:8;text-align:center;max-width:86%}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* контекстная подсказка (MONETIZATION.md §7): явная ширина, иначе у края схлопнется в колонку */
+  #tip{position:fixed;width:230px;background:var(--paper);border:2.5px solid var(--line);border-radius:14px;
+       padding:9px 11px;font-weight:800;font-size:13px;color:var(--ink);z-index:9;pointer-events:none;
+       box-shadow:0 4px 0 rgba(74,52,38,.25);display:none}
+  #tip.on{display:block}
+  .tipTarget{outline:3px solid #F0B93F;outline-offset:3px;animation:tipPulse 1.2s ease-in-out infinite}
+  @keyframes tipPulse{0%,100%{outline-color:#F0B93F}50%{outline-color:rgba(240,185,63,.25)}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div class="top">
+    <div class="chip" id="shardChip">
+      <svg class="ic" viewBox="0 0 28 28"><g stroke="#4A3426" stroke-width="2" stroke-linejoin="round"><path d="M6 10.5 13.5 3l8.5 6-3.5 13-10 2z" fill="#C96FA8"/><path d="M13.5 3 10 23" fill="none" stroke-width="1.4"/><path d="M6 10.5 18.5 22" fill="none" stroke-width="1.4"/></g><path d="M9.5 8.5 13 5.5l2 1.6-3.6 3z" fill="#fff" opacity=".55"/></svg>
+      <span class="tx"><span class="v" id="shardV">0</span><span class="l" id="shardL">ОСКОЛКИ</span></span>
+    </div>
+    <div class="medal" id="panelMedal"><canvas id="medalThumb" width="92" height="92"></canvas><span class="mv" id="medalV">0/3</span></div>
+    <div class="spacer"></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="bottom">
+    <button class="rbtn" id="galleryBtn" aria-label="Галерея">
+      <svg viewBox="0 0 28 28"><g stroke="#4A3426" stroke-width="2" stroke-linejoin="round"><path d="M5 24V11a9 9 0 0 1 18 0v13z" fill="#F0B93F"/><path d="M14 2.2V24M5 15h18" stroke-width="1.7"/><path d="M8.6 7.2 19.4 7.2" stroke-width="1.5"/><circle cx="14" cy="15" r="3.4" fill="#C96FA8"/></g></svg>
+      <span class="dot"></span>
+    </button>
+    <button class="rbtn" id="studioBtn" aria-label="Мастерская">
+      <svg viewBox="0 0 28 28"><g stroke="#4A3426" stroke-width="2" stroke-linejoin="round"><path d="M17.5 4.5a5.5 5.5 0 0 0 6.4 8.6l-9.2 9.2a2.6 2.6 0 0 1-3.7-3.7l9.2-9.2a5.5 5.5 0 0 0-2.7-4.9z" fill="#BFC7CE"/><circle cx="12" cy="20" r="1.4" fill="#4A3426" stroke="none"/></g></svg>
+      <span class="dot"></span>
+    </button>
+    <button class="rbtn" id="langBtn" aria-label="Язык"><span class="langTxt" id="langTxt">RU</span></button>
+    <button class="abtn" id="boostBtn">
+      <svg class="hic" viewBox="0 0 28 28"><g stroke="#53340C" stroke-width="2" stroke-linejoin="round"><circle cx="14" cy="14" r="6" fill="#FFEFAE"/><path d="M14 2.5v3.2M14 22.3v3.2M2.5 14h3.2M22.3 14h3.2M6 6l2.2 2.2M19.8 19.8 22 22M22 6l-2.2 2.2M8.2 19.8 6 22" stroke-linecap="round"/></g></svg>
+      <span class="col"><span class="bt" id="boostT">Свет ×2</span><span class="bs" id="boostS"></span></span>
+    </button>
+  </div>
+</div>
+
+<div id="gallery" class="modal"><div class="sheet">
+  <button class="mClose" id="galleryClose">×</button>
+  <div class="mTitle" id="galleryTitle"></div>
+  <div class="mSub" id="gallerySub"></div>
+  <div class="scroll"><div class="grid3" id="galleryGrid"></div></div>
+</div></div>
+
+<div id="studio" class="modal"><div class="sheet">
+  <button class="mClose" id="studioClose">×</button>
+  <div class="mTitle" id="studioTitle"></div>
+  <div class="mSub" id="studioSub"></div>
+  <div class="scroll" id="studioList"></div>
+</div></div>
+
+<div id="winCard" class="modal center"><div class="cardBox">
+  <div class="mTitle" id="winTitle" style="margin:0 4px"></div>
+  <canvas class="hero" id="winHero" width="232" height="264"></canvas>
+  <div class="big"><span id="winAmt">+0</span></div>
+  <div class="note" id="winNote"></div>
+  <div class="btns"><button class="take" id="winTake"></button><button class="adx" id="winX2"><span id="winX2T"></span><span class="s"><svg viewBox="0 0 12 12"><path d="M3 2l7 4-7 4z" fill="#fff"/></svg><span id="winX2S"></span></span></button></div>
+</div></div>
+
+<div id="stuck" class="modal center"><div class="cardBox">
+  <div class="mTitle" id="stuckTitle" style="margin:0 4px"></div>
+  <div class="note" id="stuckNote"></div>
+  <div class="btns"><button class="take" id="stuckNew"></button><button class="adx" id="stuckSweep"><span id="stuckSweepT"></span><span class="s" id="stuckSweepS"></span></button></div>
+</div></div>
+
+<div id="offline" class="modal center"><div class="cardBox">
+  <div class="mTitle" id="offTitle" style="margin:0 4px"></div>
+  <div class="note" id="offNote"></div>
+  <div class="lines" id="offLines"></div>
+  <div class="big"><span id="offAmt">+0</span></div>
+  <div class="btns"><button class="take" id="offTake"></button><button class="adx" id="offX2"><span id="offX2T"></span><span class="s"><svg viewBox="0 0 12 12"><path d="M3 2l7 4-7 4z" fill="#fff"/></svg><span id="offX2S"></span></span></button></div>
+</div></div>
+
+<div id="daily" class="modal center"><div class="cardBox">
+  <div class="mTitle" id="dayTitle" style="margin:0 4px"></div>
+  <div class="note" id="dayNote"></div>
+  <div class="days" id="dayGrid"></div>
+  <div class="btns"><button class="take" id="dayTake"></button><button class="adx" id="dayX2"><span id="dayX2T"></span><span class="s"><svg viewBox="0 0 12 12"><path d="M3 2l7 4-7 4z" fill="#fff"/></svg><span id="dayX2S"></span></span></button></div>
+</div></div>
+
+<div id="toast"></div>
+<div id="tip"></div>
+<script>
+'use strict';
+// ============================================================
+//  Витражная Мастерская / Stained Glass Studio
+//  Перетаскивай осколки цветного стекла из лотка в свинцовую раму окна.
+//  Полный ряд или столбец спаивается — сквозь него бьёт закатный свет и
+//  сыплются осколки. Из спаянных рядов складывается витраж; готовые витражи
+//  висят гирляндой в мастерской и ловят свет сами (в том числе офлайн).
+// ============================================================
+const SAVE_KEY = "stained_glass_studio_v1";
+const LB_NAME  = "panels";
+const N = 6;                                  // поле 6x6
+let ysdk=null, player=null, lb=null, saveT=0, booted=false, readySent=false;
+let catchUp=false;   // идёт досчёт офлайна: гасим save/sfx/fx на каждом шаге (MONETIZATION.md §10.1)
+
+// ---------- i18n ----------
+// язык платформы читаем безусловно при готовности SDK (даже если есть ручной выбор игрока),
+// автоопределённый язык НЕ сохраняем — в сейв пишется только явный выбор кнопкой (§8.2)
+let platformLang=null;
+function readPlatformLang(){
+  try{ if(ysdk&&ysdk.environment&&ysdk.environment.i18n&&ysdk.environment.i18n.lang){
+    platformLang = ysdk.environment.i18n.lang==="ru"?"ru":"en"; return; } }catch(e){}
+  platformLang = (navigator.language||"ru").slice(0,2)==="ru"?"ru":"en";
+}
+function lang(){
+  try{ if(S && (S.lang==="ru"||S.lang==="en")) return S.lang; }catch(e){}
+  if(platformLang===null) readPlatformLang();
+  return platformLang;
+}
+function toggleLang(){
+  S.lang = lang()==="ru" ? "en" : "ru";
+  document.documentElement.setAttribute("lang", S.lang);
+  refreshHud(true); persist(true); sfx("tap");
+}
+const STR = {
+  shards:{ru:"ОСКОЛКИ",en:"SHARDS"},
+  gallery:{ru:"Галерея витражей",en:"Stained glass gallery"},
+  gallerySub:{ru:"Готовые витражи ловят свет и приносят осколки сами — даже когда игры нет",
+              en:"Finished panels catch the light and bring shards on their own — even while you're away"},
+  studio:{ru:"Мастерская",en:"Workshop"},
+  studioSub:{ru:"Инструменты делают работу щедрее",en:"Tools make the work more rewarding"},
+  perSec:{ru:"/с",en:"/s"}, perHour:{ru:"в час",en:"per hour"},
+  buy:{ru:"Купить",en:"Buy"}, maxed:{ru:"Предел",en:"Maxed"},
+  need:{ru:"Не хватает осколков",en:"Not enough shards"},
+  lines:{ru:"рядов",en:"lines"}, linesLeft:{ru:"ещё {n} ряд.",en:"{n} more lines"},
+  locked:{ru:"Закрыт",en:"Locked"},
+  winTitle:{ru:"Витраж готов!",en:"Panel finished!"},
+  winNote:{ru:"«{n}» теперь в гирлянде · +{i} {w} в час",en:"“{n}” now hangs in the garland · +{i} shards per hour"},
+  take:{ru:"Забрать",en:"Collect"}, x2:{ru:"×2",en:"×2"}, video:{ru:"ролик",en:"video"},
+  boost:{ru:"Свет ×2",en:"Light ×2"}, boostS:{ru:"5 минут",en:"5 minutes"},
+  boostOn:{ru:"Свет ×2",en:"Light ×2"}, boostLeft:{ru:"ещё {s} с",en:"{s}s left"},
+  boostGot:{ru:"Свет ×2 на 5 минут!",en:"Light ×2 for 5 minutes!"},
+  stuckTitle:{ru:"Осколки не влезают",en:"Nothing fits"},
+  stuckNote:{ru:"Ни один осколок из лотка не встаёт в раму. Смести стол или возьми новое стекло — штрафа нет.",
+             en:"None of the shards in the tray fit the frame. Sweep the bench or take fresh glass — no penalty."},
+  stuckNew:{ru:"Новое стекло",en:"Fresh glass"}, stuckNewS:{ru:"рама пустеет",en:"frame clears"},
+  stuckSweep:{ru:"Сменить лоток",en:"Swap the tray"},
+  sweepFree:{ru:"бесплатно ×",en:"free ×"},
+  swept:{ru:"Новые осколки в лотке",en:"Fresh shards in the tray"},
+  cleared:{ru:"Мастер смёл осколки со стола",en:"The bench has been swept clean"},
+  offTitle:{ru:"С возвращением!",en:"Welcome back!"},
+  offNote:{ru:"Тебя не было {h}. Витражи ловили свет:",en:"You were away for {h}. The panels kept catching light:"},
+  awayToast:{ru:"Пока тебя не было: +",en:"While you were away: +"},
+  dayTitle:{ru:"Ежедневная награда",en:"Daily reward"},
+  dayNote:{ru:"Серия: {n} дн. подряд. Не пропускай — награда растёт!",en:"Streak: {n} days in a row. Keep it up — rewards grow!"},
+  dayN:{ru:"День",en:"Day"}, daySweep:{ru:"+смена лотка",en:"+tray swap"}, daySweep2:{ru:"+2 смены лотка",en:"+2 tray swaps"},
+  dayGot:{ru:"Награда дня:",en:"Daily reward:"},
+  tapHint:{ru:"Перетащи осколок из лотка в раму — собери полный ряд, и он спаяется",
+           en:"Drag a shard from the tray into the frame — complete a full line to solder it"},
+  tipBoost:{ru:"«Свет ×2» удваивает осколки на 5 минут",en:"“Light ×2” doubles shards for 5 minutes"},
+  tipGallery:{ru:"Готовые витражи приносят осколки даже когда игра закрыта",en:"Finished panels bring shards even while the game is closed"},
+  tipStudio:{ru:"Алмазный резак даёт больше осколков за каждый ряд",en:"The diamond cutter pays more for every soldered line"},
+  shortcut:{ru:"Добавить игру на экран",en:"Add game to home screen"},
+  shortcutD:{ru:"+2 смены лотка в подарок",en:"+2 tray swaps as a gift"},
+  shortcutBtn:{ru:"Добавить",en:"Add"}, shortcutGot:{ru:"Спасибо! +2 смены лотка",en:"Thanks! +2 tray swaps"},
+  mouse:{ru:"Бусинка",en:"Beadie"},
+  income:{ru:"Свет гирлянды:",en:"Garland income:"},
+  allDone:{ru:"Все девять витражей собраны! Мастерская сияет.",en:"All nine panels are done! The workshop glows."},
+  soldered:{ru:"Спаяно рядов:",en:"Lines soldered:"},
+  combo:{ru:"{n} {w} разом!",en:"{n} lines at once!"},
+};
+const T = k => (STR[k]||{})[lang()] || (STR[k]||{}).ru || k;
+const nm = o => lang()==="ru"? o.ru : o.en;
+// склонение числительных RU (ряд/ряда/рядов, осколок/осколка/осколков)
+function plural(n, one, few, many){
+  if(lang()!=="ru") return many;
+  n=Math.abs(Math.floor(n))%100;
+  if(n>=11 && n<=14) return many;
+  const d=n%10;
+  return d===1? one : (d>=2&&d<=4? few : many);
+}
+const plLine  = n => plural(n,"ряд","ряда","рядов");
+const plShard = n => plural(n,"осколок","осколка","осколков");
+
+// ---------- Стекло: 6 цветов, у каждого свой рисунок граней ----------
+const GLASS = [
+  {col:'#D8486A', facet:'rays'},     // рубин — радиальные грани
+  {col:'#F2A63C', facet:'honey'},    // янтарь — медовые капли
+  {col:'#5FB87A', facet:'vein'},     // изумруд — прожилка листа
+  {col:'#4E93D6', facet:'wave'},     // сапфир — волны
+  {col:'#A472D6', facet:'star'},     // аметист — искра-звезда
+  {col:'#3FB3A8', facet:'arc'},      // бирюза — концентрические дуги
+];
+// ---------- Осколки: формы (полимино) ----------
+const SHAPES = [
+  {k:'u1', w:1,h:1, c:[[0,0]],                     wt:9},
+  {k:'h2', w:2,h:1, c:[[0,0],[1,0]],               wt:10},
+  {k:'v2', w:1,h:2, c:[[0,0],[0,1]],               wt:10},
+  {k:'h3', w:3,h:1, c:[[0,0],[1,0],[2,0]],         wt:7},
+  {k:'v3', w:1,h:3, c:[[0,0],[0,1],[0,2]],         wt:7},
+  {k:'sq', w:2,h:2, c:[[0,0],[1,0],[0,1],[1,1]],   wt:6},
+  {k:'la', w:2,h:2, c:[[0,0],[0,1],[1,1]],         wt:5},
+  {k:'lb', w:2,h:2, c:[[0,0],[1,0],[1,1]],         wt:5},
+  {k:'lc', w:2,h:2, c:[[1,0],[0,1],[1,1]],         wt:5},
+  {k:'ld', w:2,h:2, c:[[0,0],[1,0],[0,1]],         wt:5},
+  {k:'h4', w:4,h:1, c:[[0,0],[1,0],[2,0],[3,0]],   wt:4},
+  {k:'v4', w:1,h:4, c:[[0,0],[0,1],[0,2],[0,3]],   wt:4},
+  {k:'t4', w:3,h:2, c:[[0,0],[1,0],[2,0],[1,1]],   wt:3},
+];
+// ---------- Витражи-коллекция (фиксированный порядок) ----------
+const PANELS = [
+  {id:'rose',  ru:'Роза',        en:'Rose',        need:3,  ips:0.006},
+  {id:'sun',   ru:'Солнце',      en:'Sun',         need:5,  ips:0.008},
+  {id:'crane', ru:'Журавль',     en:'Crane',       need:7,  ips:0.01},
+  {id:'boat',  ru:'Парусник',    en:'Sailboat',    need:9,  ips:0.013},
+  {id:'apple', ru:'Яблоня',      en:'Apple Tree',  need:11, ips:0.016},
+  {id:'moon',  ru:'Луна',        en:'Moon',        need:13, ips:0.02},
+  {id:'fish',  ru:'Рыбка',       en:'Little Fish', need:15, ips:0.024},
+  {id:'bell',  ru:'Колокольчик', en:'Bluebell',    need:17, ips:0.03},
+  {id:'dragon',ru:'Дракоша',     en:'Dragonling',  need:20, ips:0.04},
+];
+// ---------- Инструменты (апгрейды) ----------
+const TOOLS = [
+  {id:'cut',  ru:'Алмазный резак', en:'Diamond cutter', max:6, base:50,  mul:1.95,
+   dRu:l=>'+'+(7+5*l)+' осколков за ряд', dEn:l=>'+'+(7+5*l)+' shards per line'},
+  {id:'lamp', ru:'Яркая лампа',    en:'Bright lamp',    max:5, base:240, mul:2.2,
+   dRu:l=>'Свет гирлянды ×'+(1+0.25*l).toFixed(2), dEn:l=>'Garland light ×'+(1+0.25*l).toFixed(2)},
+  {id:'lead', ru:'Тонкий свинец',  en:'Fine lead came', max:3, base:420, mul:3,
+   dRu:l=>l?'Мелкие осколки в лотке чаще':'Чаще мелкие удобные осколки',
+   dEn:l=>l?'Small shards appear more often':'Handy small shards more often'},
+];
+const TL = id => TOOLS.find(t=>t.id===id);
+
+// ---------- Состояние ----------
+function fresh(){ return {
+  v:1, shards:0, lifetime:0,
+  grid:new Array(N*N).fill(-1),      // -1 пусто, иначе индекс цвета стекла
+  tray:[null,null,null],             // [shapeIdx, colorIdx] либо null
+  panel:0, lines:0, done:0,          // текущий витраж, спаяно рядов, всего готовых витражей
+  panels:[],                         // id собранных витражей (гирлянда)
+  up:{cut:0,lamp:0,lead:0},
+  sweeps:0, boostUntil:0,
+  streak:0, lastClaimDay:"",
+  tips:{}, tutDone:false, reviewAsked:false, shortcutDone:false,
+  lang:null, time:Date.now()
+};}
+let S = fresh();
+
+// ---------- Экономика ----------
+const lineBase   = () => 7 + 5*S.up.cut;
+const comboMul   = n => 1 + 0.35*(n-1);
+const lampMul    = () => 1 + 0.25*S.up.lamp;
+const boostOn    = () => Date.now() < S.boostUntil;
+const boostMul   = () => boostOn() ? 2 : 1;
+const panelOf    = i => PANELS[Math.min(i, PANELS.length-1)];
+const needNow    = () => S.panel<PANELS.length ? PANELS[S.panel].need : 0;
+const panelReward= i => 30 + 30*i;
+const ips        = () => S.panels.reduce((a,id)=>{ const p=PANELS.find(x=>x.id===id); return a+(p?p.ips:0); },0) * lampMul();
+const toolCost   = t => Math.round(t.base*Math.pow(t.mul, S.up[t.id]));
+const toolLvl    = t => S.up[t.id];
+const nextTool   = () => TOOLS.filter(t=>toolLvl(t)<t.max).sort((a,b)=>toolCost(a)-toolCost(b))[0] || null;
+const upCost     = () => { const t=nextTool(); return t? toolCost(t) : 0; };
+// earn — обычный заработок (ряды, витражи, свет гирлянды): идёт в метрики прогресса;
+// grant — подарки (реклама, ежедневка): только осколки, мимо lifetime (§9)
+let hudDirty=false;
+function earn(n){ S.shards+=n; S.lifetime+=n; if(!catchUp) hudDirty=true; }
+function grant(n){ S.shards+=n; if(!catchUp) hudDirty=true; }
+
+// ---------- Сейвы ----------
+let saveFrozen=false;   // только для тестов: подмена сейва перед reload без перезаписи из pagehide
+function persist(force, flush){
+  if(catchUp || saveFrozen) return;
+  const now=Date.now();
+  if(!force && now-saveT<10000) return;
+  saveT=now; S.time=now;
+  const raw=JSON.stringify(S);
+  try{ localStorage.setItem(SAVE_KEY,raw); }catch(e){}
+  if(player){ try{ player.setData({save:raw}, !!flush); }catch(e){} }
+}
+let lastFlushAt=0;
+function flushSave(){
+  const now=Date.now();
+  if(now-lastFlushAt<3000) return;    // дожим тоже троттлим, иначе дёрганые вкладки сожгут лимит облака
+  lastFlushAt=now;
+  persist(true, true);
+}
+let hiddenAt=0;
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){ hiddenAt=Date.now(); flushSave(); }
+  else if(booted && hiddenAt){ const away=(Date.now()-hiddenAt)/1000; hiddenAt=0; applyAway(away,'resume'); }
+});
+addEventListener("pagehide", flushSave);
+function restore(raw){
+  // разбираем в отдельный объект; при любой ошибке остаётся ЧИСТОЕ fresh()-состояние,
+  // а не частично слитое (§10.2)
+  if(!raw) return;
+  let d=null;
+  try{ d=(typeof raw==="string")?JSON.parse(raw):(raw.save?JSON.parse(raw.save):raw); }catch(e){ d=null; }
+  if(!d || typeof d!=="object" || Array.isArray(d)) return;
+  const n=fresh();
+  try{
+    const num=(v,def,min)=> (typeof v==="number"&&isFinite(v)&&v>=min)? v : def;
+    n.shards   = num(d.shards,0,0);
+    n.lifetime = num(d.lifetime,0,0);
+    // неизвестный индекс цвета из чужой/будущей версии — это «пусто», а не самое дорогое стекло
+    n.grid     = Array.isArray(d.grid)&&d.grid.length===N*N
+                 ? d.grid.map(v=>(typeof v==="number"&&v>=0&&v<GLASS.length)? Math.floor(v) : -1)
+                 : new Array(N*N).fill(-1);
+    n.tray     = Array.isArray(d.tray)&&d.tray.length===3
+                 ? d.tray.map(p=>(Array.isArray(p)&&p.length===2&&p[0]>=0&&p[0]<SHAPES.length&&p[1]>=0&&p[1]<GLASS.length)
+                     ? [Math.floor(p[0]),Math.floor(p[1])] : null)
+                 : [null,null,null];
+    n.panels   = Array.isArray(d.panels)? d.panels.filter((id,i,a)=>PANELS.some(p=>p.id===id)&&a.indexOf(id)===i) : [];
+    n.done     = n.panels.length;
+    n.panel    = Math.min(PANELS.length, Math.max(n.done, Math.floor(num(d.panel,n.done,0))));
+    n.lines    = Math.max(0, Math.floor(num(d.lines,0,0)));
+    if(needNowFor(n) && n.lines>=needNowFor(n)) n.lines = Math.max(0, needNowFor(n)-1);
+    const up=(d.up&&typeof d.up==="object"&&!Array.isArray(d.up))? d.up : {};
+    TOOLS.forEach(t=>{ n.up[t.id]=Math.max(0, Math.min(t.max, Math.floor(num(up[t.id],0,0)))); });
+    n.sweeps   = Math.min(99, Math.floor(num(d.sweeps,0,0)));
+    n.boostUntil = Math.min(num(d.boostUntil,0,0), Date.now()+BOOST_MS);
+    n.streak   = Math.floor(num(d.streak,0,0));
+    n.lastClaimDay = typeof d.lastClaimDay==="string"? d.lastClaimDay : "";
+    n.tips     = (d.tips && typeof d.tips==="object" && !Array.isArray(d.tips))? d.tips : {};
+    n.tutDone  = !!d.tutDone; n.reviewAsked=!!d.reviewAsked; n.shortcutDone=!!d.shortcutDone;
+    n.lang     = (d.lang==="ru"||d.lang==="en")? d.lang : null;
+    n.time     = num(d.time,Date.now(),0);
+    if(n.time>Date.now()) n.time=Date.now();
+    S=n;
+  }catch(e){ S=fresh(); }
+}
+const needNowFor = st => st.panel<PANELS.length ? PANELS[st.panel].need : 0;
+
+// ---------- Реклама ----------
+const AD_GAP_S=180, AD_WARMUP_S=90, AD_RETRY_S=45;
+const sessionStart=Date.now();
+let nextAdAt=sessionStart+AD_WARMUP_S*1000, adBusy=false;
+const anyModal = () => !!document.querySelector('.modal.open');
+function adAllowed(){
+  if(!ysdk || !ysdk.adv || !ysdk.adv.showFullscreenAdv) return false;
+  if(adBusy || document.hidden) return false;
+  if(Date.now()<nextAdAt) return false;
+  if(anyModal()) return false;
+  if(boostOn()) return false;              // не рвём оплаченный бонус
+  return true;
+}
+// межстраничная — только в естественной паузе «витраж сдан», не во время сборки
+function maybeInterstitial(){
+  if(!adAllowed()) return;
+  adBusy=true;
+  const finish = wasShown => { adBusy=false; audioResume(); nextAdAt=Date.now()+(wasShown?AD_GAP_S:AD_RETRY_S)*1000; };
+  try{
+    ysdk.adv.showFullscreenAdv({ callbacks:{
+      onOpen:  ()=>audioSuspend(),
+      onClose: was=>finish(!!was),
+      onError: ()=>finish(false),
+    }});
+  }catch(e){ finish(false); }
+}
+let rewardBusy=false;
+function showRewarded(onReward){
+  if(rewardBusy) return;
+  if(!ysdk || !ysdk.adv || !ysdk.adv.showRewardedVideo){ onReward(); return; }
+  rewardBusy=true;
+  let paid=false;                                         // onError может прийти ПОСЛЕ onRewarded
+  const pay=()=>{ if(!paid){ paid=true; onReward(); } };
+  const done=()=>{ rewardBusy=false; audioResume(); };
+  try{
+    ysdk.adv.showRewardedVideo({ callbacks:{
+      onOpen:     ()=>audioSuspend(),
+      onRewarded: pay,
+      onClose:    ()=>done(),
+      onError:    ()=>{ done(); pay(); },
+    }});
+  }catch(e){ rewardBusy=false; pay(); }
+}
+
+// ---------- Лидерборд / оценка / ярлык ----------
+function submitScore(v){
+  if(!lb || !LB_NAME || v<=0) return;
+  try{ if(player && typeof player.isAuthorized==="function" && !player.isAuthorized()) return; }catch(e){ return; }
+  try{ const p=lb.setScore(LB_NAME, Math.floor(v)); if(p&&p.catch) p.catch(()=>{}); }catch(e){}
+}
+let reviewTried=false;
+function tryReview(){
+  if(reviewTried || S.reviewAsked || !ysdk || !ysdk.feedback) return;
+  reviewTried=true;
+  try{
+    ysdk.feedback.canReview().then(r=>{
+      if(r && r.value){ S.reviewAsked=true; persist(true); return ysdk.feedback.requestReview(); }
+    }).catch(()=>{});
+  }catch(e){}
+}
+let canShortcut=false;
+function checkShortcut(){
+  if(!ysdk || !ysdk.shortcut || S.shortcutDone) return;
+  try{ ysdk.shortcut.canShowPrompt().then(r=>{ canShortcut=!!(r&&r.canShow); refreshHud(); }).catch(()=>{}); }catch(e){}
+}
+function doShortcut(){
+  if(!ysdk || !ysdk.shortcut) return;
+  try{
+    ysdk.shortcut.showPrompt().then(r=>{
+      canShortcut=false; S.shortcutDone=true;
+      if(r && r.outcome==='accepted'){ S.sweeps+=2; toast(T("shortcutGot")); sfx("coin"); }
+      persist(true); refreshHud(); buildStudio();
+    }).catch(()=>{});
+  }catch(e){}
+}
+
+// ---------- HUD ----------
+const $ = id => document.getElementById(id);
+const fmt = n => n>=1e6 ? (n/1e6).toFixed(2)+"M" : n>=1e4 ? (n/1e3).toFixed(1)+"K" : Math.floor(n).toString();
+const PLAY_SVG='<svg viewBox="0 0 12 12"><path d="M3 2l7 4-7 4z" fill="currentColor"/></svg>';
+// full=true — перестроить содержимое открытых модалок (смена языка/покупка).
+// По умолчанию открытая мастерская только освежает доступность кнопок: полный ребилд
+// на каждом обновлении HUD пересоздавал бы строки и ронял нажатие между pointerdown и pointerup.
+function refreshHud(full){
+  hudDirty=false;
+  $("shardV").textContent = fmt(S.shards);
+  $("shardL").textContent = T("shards");
+  // медальон: кольцо прогресса текущего витража + мини-мотив внутри
+  const need=needNow(), frac = need? Math.min(1, S.lines/need) : 1;
+  $("panelMedal").style.background = 'conic-gradient(var(--gold) '+(frac*360).toFixed(1)+'deg, rgba(92,67,48,.22) 0deg)';
+  $("medalV").textContent = need? (Math.min(S.lines,need)+"/"+need) : (lang()==="ru"?"ВСЁ":"ALL");
+  drawMedal();
+  $("langTxt").textContent = lang()==="ru" ? "RU" : "EN";
+  $("boostT").textContent = T("boost");
+  $("boostBtn").classList.toggle("on", boostOn());
+  $("boostS").innerHTML = boostOn()
+    ? '<span>'+T("boostLeft").replace("{s}", Math.max(0,Math.ceil((S.boostUntil-Date.now())/1000)))+'</span>'
+    : PLAY_SVG+'<span>'+T("boostS")+'</span>';
+  const nt=nextTool();
+  $("studioBtn").classList.toggle("has", !!nt && S.shards>=toolCost(nt));
+  $("galleryBtn").classList.toggle("has", S.done>0 && !S.tips.gallery);
+  document.documentElement.setAttribute("lang", lang());
+  if($("gallery").classList.contains("open") && full) buildGallery();
+  if($("studio").classList.contains("open")) full? buildStudio() : syncStudio();
+  if($("winCard").classList.contains("open")) fillWinCard();
+  if($("daily").classList.contains("open")) fillDaily();
+  if($("offline").classList.contains("open")) fillOffline();
+  if($("stuck").classList.contains("open")) fillStuck();
+  if(tipNow) $("tip").textContent = T(tipNow.text);
+}
+// Нажатие кнопки — по pointerup, а не только по click: после перетаскивания осколка
+// браузер на touch-устройствах какое-то время не синтезирует click из касания
+// (проверено в smoke-тесте), и кнопка молча не срабатывала. click оставлен
+// запасным путём (клавиатура/мышь) с дедупом по времени.
+let tapGuard=0;      // общий для всех кнопок: гасит синтетический click после pointerup
+function onTap(el, fn){
+  if(!el) return;
+  let sx=0, sy=0, down=false;
+  el.addEventListener('pointerdown', e=>{ down=true; sx=e.clientX; sy=e.clientY; });
+  el.addEventListener('pointercancel', ()=>{ down=false; });
+  el.addEventListener('pointerup', e=>{
+    if(!down) return; down=false;
+    if(Math.abs(e.clientX-sx)>14 || Math.abs(e.clientY-sy)>14) return;   // это был скролл списка, не нажатие
+    tapGuard=Date.now(); fn(e);
+  });
+  // запасной путь (клавиатура, мышь без pointer-событий): только если pointerup не сработал
+  el.addEventListener('click', e=>{ if(Date.now()-tapGuard<500) return; tapGuard=Date.now(); fn(e); });
+}
+let toastT;
+function toast(msg){ if(catchUp) return; const el=$("toast"); el.textContent=msg; el.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2200); }
+
+// ============================================================
+//  Игровая логика: лоток, укладка осколков, спайка рядов
+// ============================================================
+let phase='play';      // play | card | stuck
+function pickShape(){
+  // «Тонкий свинец» повышает долю мелких осколков (1-2 клетки)
+  const lead=S.up.lead;
+  let total=0; const wts=SHAPES.map(s=>{ const small=s.c.length<=2; const w=s.wt*(small? 1+0.7*lead : 1); total+=w; return w; });
+  let r=Math.random()*total;
+  for(let i=0;i<SHAPES.length;i++){ r-=wts[i]; if(r<=0) return i; }
+  return 0;
+}
+function newPiece(){ return [pickShape(), Math.floor(Math.random()*GLASS.length)]; }
+function refillTray(force){
+  if(force || S.tray.every(p=>!p)) S.tray=[newPiece(),newPiece(),newPiece()];
+}
+function canPlace(shapeIdx, col, row){
+  const sh=SHAPES[shapeIdx];
+  for(const [dx,dy] of sh.c){
+    const c=col+dx, r=row+dy;
+    if(c<0||r<0||c>=N||r>=N) return false;
+    if(S.grid[r*N+c]>=0) return false;
+  }
+  return true;
+}
+function fitsAnywhere(shapeIdx){
+  const sh=SHAPES[shapeIdx];
+  for(let r=0;r<=N-sh.h;r++) for(let c=0;c<=N-sh.w;c++) if(canPlace(shapeIdx,c,r)) return true;
+  return false;
+}
+function anyTrayFits(){ return S.tray.some(p=>p && fitsAnywhere(p[0])); }
+function checkStuck(){
+  if(phase!=='play') return;
+  if(anyTrayFits()) return;
+  phase='stuck'; sfx("error"); queueModal('stuck');
+}
+// укладка осколка: возвращает число спаянных рядов (или -1, если поставить нельзя)
+function placePiece(ti, col, row, silent){
+  if(phase!=='play') return -1;
+  const p=S.tray[ti]; if(!p) return -1;
+  if(!canPlace(p[0],col,row)) return -1;
+  const sh=SHAPES[p[0]];
+  for(const [dx,dy] of sh.c) S.grid[(row+dy)*N+(col+dx)]=p[1];
+  S.tray[ti]=null;
+  if(!silent) sfx("place");
+  if(!catchUp){ const cc=cellCenter(row*N+col); burstFx(cc.x,cc.y,GLASS[p[1]].col,null,6); }
+  const cleared=solderLines(silent);
+  refillTray(false);
+  if(phase==='play') checkStuck();
+  persist();
+  return cleared;
+}
+function solderLines(silent){
+  const rows=[], cols=[];
+  for(let r=0;r<N;r++){ let full=true; for(let c=0;c<N;c++) if(S.grid[r*N+c]<0){ full=false; break; } if(full) rows.push(r); }
+  for(let c=0;c<N;c++){ let full=true; for(let r=0;r<N;r++) if(S.grid[r*N+c]<0){ full=false; break; } if(full) cols.push(c); }
+  const n=rows.length+cols.length;
+  if(!n) return 0;
+  const cells=new Set();
+  rows.forEach(r=>{ for(let c=0;c<N;c++) cells.add(r*N+c); });
+  cols.forEach(c=>{ for(let r=0;r<N;r++) cells.add(r*N+c); });
+  if(!catchUp){
+    cells.forEach(i=>{ const cc=cellCenter(i); burstFx(cc.x,cc.y,GLASS[Math.max(0,S.grid[i])].col,null,5); });
+    rows.forEach(r=>beams.push({row:r, t:0}));
+    cols.forEach(c=>beams.push({col:c, t:0}));
+    mouseCheer=1.4;
+  }
+  cells.forEach(i=>{ S.grid[i]=-1; });
+  const amt=Math.round(lineBase()*n*comboMul(n)*boostMul());
+  earn(amt);
+  if(!catchUp){
+    const cx=gridX+B/2, cy=gridY+B/2;
+    burstFx(cx,cy,'#FFF2C8','+'+fmt(amt),10);
+    if(!silent) sfx("solder");
+    const finishing = S.panel<PANELS.length && S.lines+n>=PANELS[S.panel].need;
+    if(n>1 && !finishing) toast(T("combo").replace("{n}",n).replace("{w}",plLine(n)));
+  }
+  S.lines+=n;
+  if(!S.tutDone){ S.tutDone=true; persist(true); }
+  // витраж готов?
+  if(S.panel<PANELS.length && S.lines>=PANELS[S.panel].need){ finishPanel(); }
+  return n;
+}
+function finishPanel(){
+  phase='card';
+  S.lines -= PANELS[S.panel].need;
+  lastPanel=S.panel;
+  lastReward=panelReward(S.panel);
+  if(!catchUp){ sfx("panel"); mouseCheer=2.2; }
+  openModal('winCard');
+}
+let lastPanel=0, lastReward=0;
+function collectPanel(x2){
+  if(phase!=='card') return;
+  const amt=lastReward;
+  earn(amt);
+  if(x2) grant(amt);
+  const p=PANELS[lastPanel];
+  if(p && !S.panels.includes(p.id)) S.panels.push(p.id);
+  S.done=S.panels.length;
+  S.panel=Math.min(PANELS.length, lastPanel+1);
+  // свежая рама под новый витраж: стол очищается, лоток обновляется
+  S.grid=new Array(N*N).fill(-1);
+  refillTray(true);
+  phase='play';
+  closeModal('winCard');
+  burstFx(gridX+B/2, gridY+B/2, '#FFE9A8', '+'+fmt(amt), 24);
+  garlandPop=1.2;
+  submitScore(S.done);
+  refreshHud(); persist(true); sfx("coin");
+  if(S.done===PANELS.length) setTimeout(()=>toast(T("allDone")), 1400);
+  if(S.done===4) setTimeout(tryReview, 1200);
+  else setTimeout(maybeInterstitial, 400);
+  // рядов спаяли больше, чем нужно было: следующий витраж может быть готов сразу
+  if(S.panel<PANELS.length && S.lines>=PANELS[S.panel].need) finishPanel();
+}
+function sweepTray(){
+  refillTray(true);
+  phase='play';
+  closeModal('stuck');
+  toast(T("swept")); sfx("sweep"); refreshHud(); persist(true);
+  checkStuck();
+}
+function freshGlass(){
+  S.grid=new Array(N*N).fill(-1);
+  refillTray(true);
+  phase='play';
+  closeModal('stuck');
+  toast(T("cleared")); sfx("sweep"); refreshHud(); persist(true);
+}
+function buyTool(id){
+  const t=TL(id); if(!t) return false;
+  if(toolLvl(t)>=t.max) return false;
+  const c=toolCost(t);
+  if(S.shards<c){ toast(T("need")); sfx("error"); return false; }
+  S.shards-=c; S.up[id]++;
+  refreshHud(); persist(true); sfx("buy");
+  const el=$('tool-'+id);                 // строка видна только при открытой мастерской
+  if(el){ const r=el.getBoundingClientRect(); burstFx(r.left+r.width/2, r.top+r.height/2, '#F0B93F', null, 16); }
+  else burstFx(gridX+B/2, gridY+B/2, '#F0B93F', null, 14);
+  return true;
+}
+const BOOST_MS=300000;
+function startBoost(){
+  S.boostUntil=Date.now()+BOOST_MS;
+  toast(T("boostGot")); sfx("coin"); refreshHud(); persist(true);
+}
+
+// ---------- Офлайн-доход: три порога MIN / CAP / REPORT (CAP > REPORT) ----------
+const OFF_MIN=60, OFF_CAP=10*3600, OFF_REPORT=4*3600;
+const FF_STEP=30, FF_MAX_STEPS=Math.ceil(OFF_CAP/FF_STEP)+10;   // предел шагов выведен из потолка
+function fastForward(sec){
+  const gains={};
+  catchUp=true;
+  try{
+    let rem=sec, guard=0;
+    const k=lampMul();
+    while(rem>0 && guard++<FF_MAX_STEPS){
+      const st=Math.min(FF_STEP,rem);
+      for(const id of S.panels){ const p=PANELS.find(x=>x.id===id); if(!p) continue;
+        const g=p.ips*k*st; gains[id]=(gains[id]||0)+g; earn(g); }
+      rem-=st;
+    }
+  } finally { catchUp=false; }
+  return gains;
+}
+let offData=null;
+function applyAway(sec, mode){
+  if(!(sec>=OFF_MIN) || ips()<=0) return 0;
+  const credited=Math.min(sec, OFF_CAP);
+  const gains=fastForward(credited);
+  const total=Object.values(gains).reduce((a,b)=>a+b,0);
+  if(mode!=='sim'){
+    if(sec>=OFF_REPORT && Math.floor(total)>=1){
+      offData={sec:credited, gains, total};
+      queueModal('offline');
+    } else if(Math.floor(total)>=1) toast(T("awayToast")+fmt(total));
+  }
+  refreshHud(); persist(true);
+  return total;
+}
+function fmtAway(sec){ const h=Math.floor(sec/3600), m=Math.round((sec%3600)/60);
+  const hS=lang()==="ru"?" ч":" h", mS=lang()==="ru"?" мин":" min";
+  return h>=1 ? h+hS+(m>=1&&h<3? " "+m+mS:"") : Math.max(1,m)+mS; }
+
+// ---------- Ежедневная серия (7 дней, x2 за ролик) ----------
+const dayStr = ms => new Date(ms).toISOString().slice(0,10);
+const today = () => dayStr(Date.now());
+const dailyPending = () => (S.tutDone || S.done>0) && S.lastClaimDay!==today();
+const nextStreak = () => (S.lastClaimDay===dayStr(Date.now()-864e5)) ? S.streak+1 : 1;
+// награда привязана к текущему темпу (цена ряда и свет гирлянды), а не фиксирована
+const dayReward = i => Math.max(20, Math.round((lineBase()*3 + ips()*1800) * (1+i*0.5) * (i===6?2:1)));
+const daySweeps = i => i===2?1 : i===6?2 : 0;
+function claimDaily(x2){
+  if(!dailyPending()){ closeModal('daily'); return; }
+  const st=nextStreak(), i=(st-1)%7, amt=dayReward(i)*(x2?2:1);
+  S.streak=st; S.lastClaimDay=today();
+  grant(amt); S.sweeps+=daySweeps(i);
+  closeModal('daily');
+  toast(T("dayGot")+" +"+fmt(amt)+(daySweeps(i)? " · "+(daySweeps(i)===1?T("daySweep"):T("daySweep2")):""));
+  sfx("coin"); refreshHud(); persist(true);
+}
+
+// ---------- Модалки (очередь: офлайн → ежедневка → подсказки) ----------
+let mQueue=[];
+function queueModal(id){ if(!mQueue.includes(id)) mQueue.push(id); if(!anyModal()) nextModal(); }
+function nextModal(){
+  while(mQueue.length){ const id=mQueue.shift();
+    if(id==='daily' && !dailyPending()) continue;
+    if(id==='offline' && !offData) continue;
+    if(id==='stuck' && phase!=='stuck') continue;
+    openModal(id); return; }
+}
+function openModal(id){
+  if(id==='gallery') buildGallery();
+  if(id==='studio') buildStudio();
+  if(id==='daily') fillDaily();
+  if(id==='offline') fillOffline();
+  if(id==='stuck') fillStuck();
+  if(id==='winCard') fillWinCard();
+  $(id).classList.add('open'); closeTip();
+}
+function closeModal(id){ $(id).classList.remove('open'); setTimeout(()=>{ if(!anyModal()) nextModal(); }, 250); }
+function thumb(drawFn, w, h, cl){
+  const c=document.createElement('canvas'); const d=2; c.width=w*d; c.height=h*d;
+  const g=c.getContext('2d'); g.scale(d,d); drawFn(g); if(cl) c.className=cl; return c;
+}
+function buildGallery(){
+  $("galleryTitle").textContent=T("gallery")+" "+S.done+"/"+PANELS.length;
+  $("gallerySub").textContent=T("gallerySub")+" · "+T("income")+" "+fmt(ips()*3600)+" "+T("perHour");
+  const G=$("galleryGrid"); G.innerHTML="";
+  PANELS.forEach((p,i)=>{
+    const owned=S.panels.includes(p.id);
+    const card=document.createElement('div'); card.className="pcard"+(owned?"":" locked");
+    card.appendChild(thumb(g=>drawPanelArt(g,i,54,38,1,owned), 108, 76));
+    const nmEl=document.createElement('div'); nmEl.className="nm"; nmEl.textContent= owned? nm(p) : T("locked");
+    const ds=document.createElement('div'); ds.className="ds";
+    ds.textContent= owned? ('+'+fmt(p.ips*lampMul()*3600)+' '+T("perHour"))
+                         : (p.need+" "+(lang()==="ru"? plLine(p.need) : T("lines")));
+    card.appendChild(nmEl); card.appendChild(ds); G.appendChild(card);
+  });
+}
+// лёгкое обновление: только доступность кнопок покупки (строки не пересоздаются)
+function syncStudio(){
+  TOOLS.forEach(t=>{
+    const btn=$('buy-'+t.id); if(!btn) return;
+    if(toolLvl(t)>=t.max) return;
+    btn.classList.toggle('can-not', S.shards<toolCost(t));
+  });
+}
+function buildStudio(){
+  $("studioTitle").textContent=T("studio");
+  $("studioSub").textContent=T("studioSub");
+  const L=$("studioList"); L.innerHTML="";
+  TOOLS.forEach(t=>{
+    const lv=toolLvl(t), maxed=lv>=t.max, cost=toolCost(t);
+    const row=document.createElement('div'); row.className="row"; row.id='tool-'+t.id;
+    row.appendChild(thumb(g=>drawToolArt(g,t.id,56,52), 56, 52));
+    const info=document.createElement('div'); info.className="info";
+    const pips=new Array(t.max).fill(0).map((_,i)=>'<i class="'+(i<lv?'f':'')+'"></i>').join('');
+    info.innerHTML='<div class="nm">'+nm(t)+'</div><div class="ds">'+(lang()==="ru"?t.dRu(lv):t.dEn(lv))+'</div><div class="lv">'+pips+'</div>';
+    row.appendChild(info);
+    const btn=document.createElement('button'); btn.id='buy-'+t.id;
+    if(maxed){ btn.className="buy owned"; btn.textContent=T("maxed"); }
+    else{
+      btn.className="buy"+(S.shards>=cost?"":" can-not");
+      btn.innerHTML='<svg viewBox="0 0 28 28"><g stroke="#fff" stroke-width="2.4" stroke-linejoin="round" fill="none"><path d="M6 10.5 13.5 3l8.5 6-3.5 13-10 2z"/></g></svg>'+fmt(cost);
+      onTap(btn, ()=>{ if(buyTool(t.id)) buildStudio(); });
+    }
+    row.appendChild(btn); L.appendChild(row);
+  });
+  if(canShortcut && !S.shortcutDone){
+    const row=document.createElement('div'); row.className="row";
+    const info=document.createElement('div'); info.className="info";
+    info.innerHTML='<div class="nm">'+T("shortcut")+'</div><div class="ds">'+T("shortcutD")+'</div>';
+    row.appendChild(info);
+    const btn=document.createElement('button'); btn.className="buy"; btn.id="shortcutBtn"; btn.textContent=T("shortcutBtn");
+    onTap(btn, doShortcut); row.appendChild(btn); L.appendChild(row);
+  }
+}
+function fillWinCard(){
+  const p=PANELS[lastPanel]||PANELS[0];
+  $("winTitle").textContent=T("winTitle");
+  const hc=$("winHero"), hg=hc.getContext('2d');
+  hg.setTransform(2,0,0,2,0,0); hg.clearRect(0,0,116,132);
+  drawPanelArt(hg, lastPanel, 58, 66, 1.55, true);
+  $("winAmt").textContent="+"+fmt(lastReward);
+  const ph=p.ips*lampMul()*3600;
+  $("winNote").textContent=T("winNote").replace("{n}", nm(p)).replace("{i}", fmt(ph)).replace("{w}", plShard(ph));
+  $("winTake").textContent=T("take")+" +"+fmt(lastReward);
+  $("winX2T").textContent=T("x2")+" +"+fmt(lastReward*2);
+  $("winX2S").textContent=T("video");
+}
+function fillStuck(){
+  $("stuckTitle").textContent=T("stuckTitle");
+  $("stuckNote").textContent=T("stuckNote");
+  $("stuckNew").textContent=T("stuckNew");
+  $("stuckSweepT").textContent=T("stuckSweep");
+  $("stuckSweepS").innerHTML = S.sweeps>0 ? '<span>'+T("sweepFree")+S.sweeps+'</span>'
+                                          : PLAY_SVG+'<span>'+T("video")+'</span>';
+}
+function fillOffline(){
+  if(!offData) return;
+  $("offTitle").textContent=T("offTitle");
+  $("offNote").textContent=T("offNote").replace("{h}", fmtAway(offData.sec));
+  const L=$("offLines"); L.innerHTML="";
+  Object.keys(offData.gains).forEach(id=>{
+    const i=PANELS.findIndex(p=>p.id===id); if(i<0) return;
+    const ln=document.createElement('div'); ln.className="ln";
+    ln.appendChild(thumb(g=>drawPanelArt(g,i,17,19,1,true), 34, 38));
+    const s=document.createElement('span'); s.textContent=nm(PANELS[i]); ln.appendChild(s);
+    const q=document.createElement('span'); q.className="q"; q.textContent="+"+fmt(offData.gains[id]); ln.appendChild(q);
+    L.appendChild(ln);
+  });
+  $("offAmt").textContent="+"+fmt(offData.total);
+  $("offTake").textContent=T("take");
+  $("offX2T").textContent=T("x2")+" +"+fmt(offData.total*2);
+  $("offX2S").textContent=T("video");
+}
+function offCollect(x2){
+  if(!offData) return;
+  const extra=offData.total;
+  // базовая часть уже начислена досчётом; x2 — подарок поверх (grant, мимо метрик)
+  if(x2) grant(extra);
+  offData=null; closeModal('offline'); refreshHud(); persist(true); sfx("coin");
+}
+function fillDaily(){
+  const st=dailyPending()? nextStreak() : Math.max(1,S.streak), cur=(st-1)%7;
+  $("dayTitle").textContent=T("dayTitle");
+  $("dayNote").textContent=T("dayNote").replace("{n}", st);
+  const G=$("dayGrid"); G.innerHTML="";
+  for(let i=0;i<7;i++){
+    const d=document.createElement('div'); d.className="day"+(i<cur?" done":"")+(i===cur?" now":"")+(i===6?" big":"");
+    d.innerHTML='<div class="dn">'+T("dayN")+' '+(i+1)+'</div><div class="dv">+'+fmt(dayReward(i))+'</div>'
+      +(daySweeps(i)? '<div class="dh">'+(daySweeps(i)===1?T("daySweep"):T("daySweep2"))+'</div>':'');
+    G.appendChild(d);
+  }
+  $("dayTake").textContent=T("take")+" +"+fmt(dayReward(cur));
+  $("dayX2T").textContent=T("x2")+" +"+fmt(dayReward(cur)*2);
+  $("dayX2S").textContent=T("video");
+}
+
+// ---------- Контекстные подсказки (MONETIZATION.md §7) ----------
+const TIPS = [
+  { id:'boost',   target:'boostBtn',   text:'tipBoost',   pos:'above',
+    when:()=> S.tutDone && S.lifetime>=60 && !boostOn() },
+  { id:'gallery', target:'galleryBtn', text:'tipGallery', pos:'above',
+    when:()=> S.done>=1 },
+  { id:'studio',  target:'studioBtn',  text:'tipStudio',  pos:'above',
+    when:()=> S.tutDone && S.up.cut===0 && S.shards>=toolCost(TOOLS[0]) },
+];
+let tipNow=null, tipTimer=0;
+function tipTick(){
+  if(tipNow || !booted || catchUp) return;
+  if(anyModal() || phase!=='play' || drag) return;
+  const tip=TIPS.find(x=>!S.tips[x.id] && x.when());
+  if(!tip) return;
+  tipNow=tip;
+  const el=$("tip"), tg=$(tip.target);
+  el.textContent=T(tip.text); el.classList.add('on'); tg.classList.add('tipTarget');
+  const r=tg.getBoundingClientRect(), w=230;
+  let left=r.left+r.width/2-w/2; left=Math.max(8, Math.min(innerWidth-w-8, left));
+  el.style.left=left+'px';
+  if(tip.pos==='above'){ el.style.top=''; el.style.bottom=(innerHeight-r.top+12)+'px'; }
+  else { el.style.bottom=''; el.style.top=(r.bottom+12)+'px'; }
+  clearTimeout(tipTimer); tipTimer=setTimeout(closeTip, 11000);
+}
+function closeTip(){
+  if(!tipNow) return;
+  S.tips[tipNow.id]=true; persist(true);   // показана один раз навсегда — флаг в сейве
+  $("tip").classList.remove('on'); $(tipNow.target).classList.remove('tipTarget');
+  clearTimeout(tipTimer); tipNow=null;
+}
+document.addEventListener('pointerdown', ()=>{ if(tipNow) closeTip(); }, true);
+
+// ============================================================
+//  Отрисовка
+// ============================================================
+const cv=$("cv"), ctx=cv.getContext("2d");
+let W=0,H=0,DPR=1;
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+let INK="#4A3426";
+function hexRgb(h){ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  const n=parseInt(h,16); return [n>>16&255, n>>8&255, n&255]; }
+function shade(hex, amt){ // amt>0 — к белому, amt<0 — к чёрному
+  const [r,g,b]=hexRgb(hex);
+  const f=v=>Math.max(0,Math.min(255,Math.round(amt>=0 ? v+(255-v)*amt : v*(1+amt))));
+  return 'rgb('+f(r)+','+f(g)+','+f(b)+')';
+}
+function rgba(hex, a){ const [r,g,b]=hexRgb(hex); return 'rgba('+r+','+g+','+b+','+a+')'; }
+function sphereFill(g,cx,cy,r,base){
+  const gr=g.createRadialGradient(cx-r*0.35,cy-r*0.45,r*0.1,cx,cy,r*1.15);
+  gr.addColorStop(0,shade(base,0.35)); gr.addColorStop(0.6,base); gr.addColorStop(1,shade(base,-0.25)); return gr;
+}
+function vertFill(g,y0,y1,base){
+  const gr=g.createLinearGradient(0,y0,0,y1);
+  gr.addColorStop(0,shade(base,0.25)); gr.addColorStop(1,shade(base,-0.22)); return gr;
+}
+function glossSpot(g,cx,cy,r,a){
+  const gr=g.createRadialGradient(cx,cy,0,cx,cy,r);
+  gr.addColorStop(0,'rgba(255,255,255,'+(a||0.6)+')'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.beginPath(); g.arc(cx,cy,r,0,6.283); g.fill();
+}
+function rimShade(g, pathFn, y0, y1, a){
+  g.save(); pathFn(); g.clip();
+  const gr=g.createLinearGradient(0,y0,0,y1);
+  gr.addColorStop(0,'rgba(40,22,10,0)'); gr.addColorStop(1,'rgba(40,22,10,'+(a||0.3)+')');
+  g.fillStyle=gr; g.fillRect(-9999,y0,19999,y1-y0); g.restore();
+}
+function ell(g,x,y,rx,ry,rot){ g.beginPath(); g.ellipse(x,y,Math.max(0.1,rx),Math.max(0.1,ry),rot||0,0,6.283); }
+function rrect(g,x,y,w,h,r){ r=Math.min(r,Math.min(w,h)/2); g.beginPath(); g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+
+// ---------- Раскладка ----------
+let colX=0,colW=0,hudH=78,bottomH=74,B=0,gridX=0,gridY=0,cs=0,archH=0,trayY=0,trayH=0,tcs=0,cordY=0,sillY=0;
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  INK=cssVar("--ink")||INK;
+  colW=Math.min(W,620); colX=(W-colW)/2;
+  const land = W>H*1.25 && H<620;      // низкий альбомный экран: ужимаем арку и лоток
+  hudH = land? 66 : 78;
+  bottomH = land? 62 : 74;
+  trayH = Math.max(76, Math.min(land?86:116, H*0.135));
+  const avail = H - hudH - bottomH - trayH - 12;
+  B = Math.max(168, Math.min(colW-56, Math.floor(avail/(land?1.18:1.4)), 540));
+  cs = B/N;
+  archH = land? B*0.16 : B*0.34;
+  const extra = Math.max(0, avail - B - archH);
+  gridX = colX + (colW - B)/2;
+  gridY = hudH + archH + extra*0.42;
+  cordY = Math.max(hudH+6, gridY - archH - 26);
+  sillY = gridY + B + 6;
+  trayY = sillY + Math.max(8, extra*0.26);
+  tcs = Math.min(cs*0.56, (colW/3 - 26)/4);
+  // тост показываем над подоконником, поверх стекла — иначе он ложится на лоток
+  $("toast").style.bottom = Math.round(Math.max(96, H - sillY + 14))+'px';
+  spriteCache={};
+  buildBg();
+}
+addEventListener("resize",resize);
+const cellCenter = i => ({ x: gridX + (i%N + 0.5)*cs, y: gridY + (Math.floor(i/N) + 0.5)*cs });
+const slotX = k => colX + colW*(0.19 + k*0.31);
+function slotRect(k){ const w=colW*0.27, h=trayH-18; return {x:slotX(k)-w/2, y:trayY, w, h}; }
+
+// ---------- Статичная сцена мастерской (предрендер один раз в resize) ----------
+let bgCan=null;
+function townSilhouette(g,x0,x1,y,s){
+  g.beginPath(); g.moveTo(x0,y+40);
+  let x=x0;
+  const r=(n)=>{ const v=Math.sin(n*12.9898)*43758.5453; return v-Math.floor(v); };
+  let i=0;
+  while(x<x1){
+    const w=(14+r(i)*26)*s, h=(16+r(i+7)*40)*s;
+    g.lineTo(x, y-h);
+    if(r(i+3)>0.6){ g.lineTo(x+w*0.5, y-h-10*s); g.lineTo(x+w, y-h); }  // двускатная крыша
+    else g.lineTo(x+w, y-h);
+    g.lineTo(x+w, y-h*0.6);
+    x+=w; i++;
+  }
+  g.lineTo(x1,y+40); g.closePath(); g.fill();
+}
+function buildBg(){
+  if(!W) return;
+  bgCan=bgCan||document.createElement('canvas');
+  bgCan.width=W*DPR; bgCan.height=H*DPR;
+  const g=bgCan.getContext('2d'); g.setTransform(DPR,0,0,DPR,0,0);
+  const rnd=mulberry32(11);
+  // ── стена мастерской: тёплая штукатурка, темнее к низу
+  const wall=g.createLinearGradient(0,0,0,H);
+  wall.addColorStop(0,'#E2BC94'); wall.addColorStop(0.45,'#CBA07A'); wall.addColorStop(1,'#A87C58');
+  g.fillStyle=wall; g.fillRect(0,0,W,H);
+  // кирпичная кладка едва заметной фактурой
+  g.strokeStyle='rgba(120,80,50,.10)'; g.lineWidth=1;
+  for(let y=14;y<H;y+=22){ g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke();
+    for(let x=((y/22)%2)*34;x<W;x+=68){ g.beginPath(); g.moveTo(x,y); g.lineTo(x,y+22); g.stroke(); } }
+  // потолочная балка
+  g.fillStyle=vertFill(g,0,26,'#8A5F3C'); g.fillRect(0,0,W,Math.max(10,hudH*0.16));
+  g.strokeStyle=rgba('#4A3426',0.5); g.lineWidth=2; g.strokeRect(0,0,W,Math.max(10,hudH*0.16));
+  // ── оконный проём: закатное небо, дальний город
+  const oy=gridY-archH, ox=gridX-cs*0.18, ow=B+cs*0.36, oh=B+archH+cs*0.2;
+  g.save();
+  g.beginPath();
+  g.moveTo(ox, oy+archH);
+  g.quadraticCurveTo(ox, oy, ox+ow/2, oy);
+  g.quadraticCurveTo(ox+ow, oy, ox+ow, oy+archH);
+  g.lineTo(ox+ow, oy+oh); g.lineTo(ox, oy+oh); g.closePath();
+  g.clip();
+  const sky=g.createLinearGradient(0,oy,0,oy+oh);
+  sky.addColorStop(0,'#5B4C86'); sky.addColorStop(0.34,'#9C6E9C'); sky.addColorStop(0.62,'#E98E72');
+  sky.addColorStop(0.82,'#F7C070'); sky.addColorStop(1,'#FBE0A6');
+  g.fillStyle=sky; g.fillRect(ox,oy,ow,oh);
+  // солнце у горизонта + мягкое свечение
+  const sx=ox+ow*0.3, sy=oy+oh*0.78;
+  const sg=g.createRadialGradient(sx,sy,4,sx,sy,oh*0.42);
+  sg.addColorStop(0,'rgba(255,238,180,.95)'); sg.addColorStop(0.5,'rgba(255,196,120,.35)'); sg.addColorStop(1,'rgba(255,196,120,0)');
+  g.fillStyle=sg; g.beginPath(); g.arc(sx,sy,oh*0.42,0,6.283); g.fill();
+  g.fillStyle='rgba(255,246,206,.92)'; g.beginPath(); g.arc(sx,sy,Math.max(10,oh*0.072),0,6.283); g.fill();
+  // дальние холмы и город
+  g.fillStyle='rgba(120,86,120,.55)';
+  g.beginPath(); g.moveTo(ox,oy+oh*0.84);
+  for(let x=ox;x<=ox+ow;x+=10) g.lineTo(x, oy+oh*0.84 - Math.sin(x*0.013)*oh*0.035 - Math.sin(x*0.004+1)*oh*0.02);
+  g.lineTo(ox+ow,oy+oh); g.lineTo(ox,oy+oh); g.closePath(); g.fill();
+  g.fillStyle='rgba(84,58,92,.78)';
+  townSilhouette(g, ox-10, ox+ow+10, oy+oh*0.95, Math.max(0.6, ow/420));
+  // редкие окошки в городе
+  g.fillStyle='rgba(255,214,140,.75)';
+  for(let i=0;i<26;i++){ const x=ox+rnd()*ow, y=oy+oh*(0.86+rnd()*0.1);
+    g.fillRect(x, y, Math.max(1.6,ow*0.006), Math.max(2,ow*0.008)); }
+  g.restore();
+  // ── свинцовая решётка-разметка пустых ячеек (едва видимая направляющая)
+  g.save();
+  g.strokeStyle='rgba(70,52,40,.3)'; g.lineWidth=1.2;
+  for(let i=1;i<N;i++){
+    g.beginPath(); g.moveTo(gridX+i*cs, gridY); g.lineTo(gridX+i*cs, gridY+B); g.stroke();
+    g.beginPath(); g.moveTo(gridX, gridY+i*cs); g.lineTo(gridX+B, gridY+i*cs); g.stroke();
+  }
+  g.restore();
+  // ── рама окна: толстый деревянный профиль + арка
+  const fw=Math.max(9, cs*0.3);
+  g.save();
+  g.lineWidth=fw; g.strokeStyle=vertFill(g,oy,oy+oh,'#A9743F'); g.lineJoin='round';
+  g.beginPath();
+  g.moveTo(ox, oy+oh);
+  g.lineTo(ox, oy+archH);
+  g.quadraticCurveTo(ox, oy, ox+ow/2, oy);
+  g.quadraticCurveTo(ox+ow, oy, ox+ow, oy+archH);
+  g.lineTo(ox+ow, oy+oh);
+  g.stroke();
+  g.lineWidth=2.2; g.strokeStyle=rgba('#4A3426',0.85);
+  g.beginPath();
+  g.moveTo(ox-fw/2, oy+oh); g.lineTo(ox-fw/2, oy+archH);
+  g.quadraticCurveTo(ox-fw/2, oy-fw/2, ox+ow/2, oy-fw/2);
+  g.quadraticCurveTo(ox+ow+fw/2, oy-fw/2, ox+ow+fw/2, oy+archH);
+  g.lineTo(ox+ow+fw/2, oy+oh);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(ox+fw/2, oy+oh); g.lineTo(ox+fw/2, oy+archH);
+  g.quadraticCurveTo(ox+fw/2, oy+fw/2, ox+ow/2, oy+fw/2);
+  g.quadraticCurveTo(ox+ow-fw/2, oy+fw/2, ox+ow-fw/2, oy+archH);
+  g.lineTo(ox+ow-fw/2, oy+oh);
+  g.stroke();
+  g.restore();
+  // розетка в арке (декоративное стекло, уже «готовое»)
+  if(archH>cs*0.5){
+    const rx=ox+ow/2, ry=oy+archH*0.55, rr=Math.min(archH*0.4, ow*0.14);
+    for(let p=0;p<8;p++){
+      const a=p*Math.PI/4;
+      g.fillStyle=rgba(GLASS[p%GLASS.length].col, 0.75);
+      g.beginPath(); g.ellipse(rx+Math.cos(a)*rr*0.62, ry+Math.sin(a)*rr*0.62, rr*0.34, rr*0.22, a, 0, 6.283); g.fill();
+      g.strokeStyle=rgba('#4A3426',0.7); g.lineWidth=1.6; g.stroke();
+    }
+    g.fillStyle=sphereFill(g,rx,ry,rr*0.34,'#F7D37A'); g.beginPath(); g.arc(rx,ry,rr*0.34,0,6.283); g.fill();
+    g.strokeStyle=rgba('#4A3426',0.8); g.lineWidth=2; g.stroke();
+    glossSpot(g, rx-rr*0.12, ry-rr*0.14, rr*0.2, 0.5);
+  }
+  // ── подоконник во всю ширину стены
+  const sg2=g.createLinearGradient(0,sillY,0,sillY+22);
+  sg2.addColorStop(0,'#D6A776'); sg2.addColorStop(1,'#A9743F');
+  g.fillStyle=sg2; rrect(g, -10, sillY, W+20, 20, 7); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.85); g.lineWidth=2.4; g.stroke();
+  rimShade(g, ()=>rrect(g, -10, sillY, W+20, 20, 7), sillY+8, sillY+20, 0.3);
+  // стол-верстак во всю ширину
+  g.fillStyle=vertFill(g, trayY-6, H, '#9A6A42');
+  rrect(g, -14, trayY-8, W+28, H-trayY+20, 12); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.7); g.lineWidth=2.2; g.stroke();
+  // древесные волокна
+  g.strokeStyle='rgba(74,52,38,.14)'; g.lineWidth=1.3;
+  for(let i=0;i<9;i++){ const y=trayY+6+i*((H-trayY)/9);
+    g.beginPath(); g.moveTo(0,y); g.bezierCurveTo(W*0.3,y+3,W*0.7,y-3,W,y+1); g.stroke(); }
+  // гнёзда лотка
+  for(let k=0;k<3;k++){
+    const r=slotRect(k);
+    g.fillStyle='rgba(74,46,28,.30)'; rrect(g, r.x, r.y, r.w, r.h, 12); g.fill();
+    g.strokeStyle=rgba('#4A3426',0.5); g.lineWidth=2; g.stroke();
+  }
+  // ── боковой декор на широком экране: стеллажи, эскиз на стене, доска с инструментом
+  const sideW=gridX-14;
+  if(sideW>150){
+    const s=Math.min(1.6, sideW/150);
+    const lx=Math.max(70*s, sideW*0.5), rx=W-lx;
+    drawShelf(g, lx, gridY+B*0.16, s);
+    drawShelf(g, lx, gridY+B*0.52, s*0.92);
+    drawSketch(g, lx, gridY-archH*0.2, s);
+    drawShelf(g, rx, gridY+B*0.42, -s);
+    drawToolBoard(g, rx, gridY+B*0.02, s);
+    drawJar(g, rx-26*s, sillY-1, s);
+    drawJar(g, lx+42*s, sillY-1, s*0.82);
+  }
+  // ── виньетка, собирающая взгляд к окну
+  const vg=g.createRadialGradient(W/2,gridY+B*0.45,Math.min(W,H)*0.3,W/2,gridY+B*0.45,Math.max(W,H)*0.76);
+  vg.addColorStop(0,'rgba(40,24,16,0)'); vg.addColorStop(1,'rgba(40,24,16,.34)');
+  g.fillStyle=vg; g.fillRect(0,0,W,H);
+}
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+// стеллаж с листами цветного стекла (боковой декор)
+function drawShelf(g,x,y,s){
+  g.save(); g.translate(x,y); g.scale(s,1);
+  g.fillStyle=vertFill(g,0,16,'#8A5F3C'); rrect(g,-52,0,104,14,4); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.8); g.lineWidth=2; g.stroke();
+  for(let i=0;i<5;i++){
+    const col=GLASS[i].col, h=36+((i*13)%4)*9, w=15;
+    const px=-46+i*19, py=-h;
+    g.fillStyle=rgba(col,0.85); g.beginPath();
+    g.moveTo(px, py+h); g.lineTo(px+2, py); g.lineTo(px+w, py+3); g.lineTo(px+w-1, py+h); g.closePath(); g.fill();
+    g.strokeStyle=rgba('#4A3426',0.8); g.lineWidth=1.8; g.stroke();
+    g.fillStyle='rgba(255,255,255,.3)'; g.beginPath();
+    g.moveTo(px+3, py+h-3); g.lineTo(px+4.5, py+4); g.lineTo(px+7, py+4.5); g.lineTo(px+6, py+h-3); g.closePath(); g.fill();
+  }
+  g.restore();
+}
+// эскиз витража в рамке на стене
+function drawSketch(g,x,y,s){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  g.fillStyle='rgba(60,40,26,.18)'; rrect(g,-33,-40,68,82,4); g.fill();
+  g.fillStyle=vertFill(g,-42,42,'#8A5F3C'); rrect(g,-36,-44,72,86,5); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.85); g.lineWidth=2; g.stroke();
+  g.fillStyle='#F6E6C4'; rrect(g,-29,-37,58,72,3); g.fill(); g.stroke();
+  // набросок розетки карандашом
+  g.strokeStyle='rgba(90,66,48,.7)'; g.lineWidth=1.4;
+  g.beginPath(); g.arc(0,-6,15,0,6.283); g.stroke();
+  for(let i=0;i<6;i++){ const a=i*Math.PI/3;
+    g.beginPath(); g.ellipse(Math.cos(a)*9,-6+Math.sin(a)*9,7,4.4,a,0,6.283); g.stroke(); }
+  g.beginPath(); g.moveTo(-20,18); g.lineTo(20,18); g.moveTo(-20,24); g.lineTo(12,24); g.stroke();
+  g.restore();
+}
+// доска с подвешенным инструментом
+function drawToolBoard(g,x,y,s){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  g.fillStyle=vertFill(g,-26,26,'#A9743F'); rrect(g,-34,-26,68,52,5); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.85); g.lineWidth=2; g.stroke();
+  g.strokeStyle=rgba('#4A3426',0.5); g.lineWidth=1.4;
+  g.beginPath(); g.moveTo(-34,-10); g.lineTo(34,-10); g.stroke();
+  // резак
+  g.strokeStyle=INK; g.lineWidth=1.8;
+  g.fillStyle=vertFill(g,-4,16,'#B3763F'); rrect(g,-21,-4,7,18,3); g.fill(); g.stroke();
+  g.fillStyle=vertFill(g,-18,-2,'#C9D3DC'); rrect(g,-21,-18,7,14,2.5); g.fill(); g.stroke();
+  // щипцы
+  g.fillStyle=vertFill(g,-16,14,'#9AA3AC');
+  g.beginPath(); g.moveTo(2,14); g.lineTo(6,-4); g.lineTo(10,-16); g.lineTo(14,-16); g.lineTo(11,-2); g.lineTo(8,14); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(18,14); g.lineTo(14,-4); g.lineTo(10,-16); g.lineTo(6,-16); g.lineTo(9,-2); g.lineTo(12,14); g.closePath(); g.fill(); g.stroke();
+  g.restore();
+}
+// банка с нарезанным стеклом на подоконнике
+function drawJar(g,x,y,s){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  g.fillStyle='rgba(60,40,26,.2)'; ell(g,0,0,15,4); g.fill();
+  g.fillStyle='rgba(222,240,246,.55)'; rrect(g,-12,-26,24,26,6); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.8); g.lineWidth=2; g.stroke();
+  g.save(); rrect(g,-12,-26,24,26,6); g.clip();
+  for(let i=0;i<7;i++){ const col=GLASS[i%GLASS.length].col;
+    g.fillStyle=rgba(col,0.9); g.save(); g.translate(-8+((i*7)%17), -4-((i*5)%14)); g.rotate(i*1.1);
+    g.fillRect(-3.4,-3.4,6.8,6.8); g.restore(); }
+  g.restore();
+  g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=2;
+  g.beginPath(); g.moveTo(-8,-22); g.lineTo(-8,-6); g.stroke();
+  g.fillStyle=vertFill(g,-31,-25,'#C08E5A'); rrect(g,-14,-31,28,7,3); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.8); g.lineWidth=1.8; g.stroke();
+  g.restore();
+}
+// инструменты на верстаке (иконки для модалки мастерской)
+function drawToolArt(g,id,w,h){
+  g.save(); g.translate(w/2,h/2);
+  g.lineJoin='round'; g.strokeStyle=INK;
+  if(id==='cut'){
+    g.fillStyle=vertFill(g,-16,16,'#B3763F'); g.lineWidth=2;
+    rrect(g,-4,-2,8,18,3); g.fill(); g.stroke();
+    g.fillStyle=vertFill(g,-18,0,'#C9D3DC'); rrect(g,-5,-17,10,16,3); g.fill(); g.stroke();
+    g.fillStyle='#8FA7BC'; g.beginPath(); g.moveTo(-3,-17); g.lineTo(0,-21); g.lineTo(3,-17); g.closePath(); g.fill(); g.stroke();
+    glossSpot(g,-2,-12,4,0.6);
+  } else if(id==='lamp'){
+    g.strokeStyle=INK; g.lineWidth=2;
+    g.beginPath(); g.moveTo(0,-20); g.lineTo(0,-13); g.stroke();
+    g.fillStyle=vertFill(g,-13,2,'#D8B35A');
+    g.beginPath(); g.moveTo(-13,2); g.lineTo(-7,-13); g.lineTo(7,-13); g.lineTo(13,2); g.closePath(); g.fill(); g.stroke();
+    const lg=g.createRadialGradient(0,6,1,0,6,16); lg.addColorStop(0,'rgba(255,236,170,.95)'); lg.addColorStop(1,'rgba(255,236,170,0)');
+    g.fillStyle=lg; g.beginPath(); g.arc(0,6,16,0,6.283); g.fill();
+    g.fillStyle='#FFF0B8'; g.beginPath(); g.arc(0,4,4.6,0,6.283); g.fill(); g.strokeStyle=rgba('#A8731E',0.8); g.stroke();
+  } else {
+    g.strokeStyle=INK; g.lineWidth=2;
+    g.fillStyle=vertFill(g,-12,12,'#9AA3AC');
+    g.beginPath(); g.moveTo(-17,6); g.quadraticCurveTo(0,-4,17,6); g.quadraticCurveTo(0,2,-17,6); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=vertFill(g,-16,0,'#B9C2CB');
+    g.beginPath(); g.moveTo(-15,-2); g.quadraticCurveTo(0,-14,15,-2); g.quadraticCurveTo(0,-8,-15,-2); g.closePath(); g.fill(); g.stroke();
+    glossSpot(g,-4,-7,5,0.5);
+  }
+  g.restore();
+}
+
+// ---------- Стекло в ячейке: градиент + блик + rim-shade + свой рисунок граней ----------
+let spriteCache={};
+function glassSprite(ci, size){
+  const key=ci+'_'+Math.round(size);
+  if(spriteCache[key]) return spriteCache[key];
+  const pad=3, px=Math.ceil((size+pad*2)*DPR);
+  const c=document.createElement('canvas'); c.width=px; c.height=px;
+  const g=c.getContext('2d'); g.setTransform(DPR,0,0,DPR,0,0); g.translate(pad,pad);
+  const col=GLASS[ci].col, s=size, r=Math.max(3,s*0.17);
+  const path=()=>rrect(g,0.5,0.5,s-1,s-1,r);
+  // тело: диагональный градиент «свет сверху-слева»
+  const grd=g.createLinearGradient(0,0,s*0.8,s);
+  grd.addColorStop(0,shade(col,0.42)); grd.addColorStop(0.45,col); grd.addColorStop(1,shade(col,-0.3));
+  g.fillStyle=grd; path(); g.fill();
+  // рисунок граней — свой у каждого цвета
+  g.save(); path(); g.clip();
+  g.strokeStyle='rgba(255,255,255,.34)'; g.lineWidth=Math.max(1,s*0.045); g.lineCap='round';
+  const f=GLASS[ci].facet;
+  if(f==='rays'){ for(let i=0;i<3;i++){ g.beginPath(); g.moveTo(s*0.5,s*0.5); g.lineTo(s*(0.1+i*0.42), s*0.08); g.stroke(); } }
+  else if(f==='honey'){ g.fillStyle='rgba(255,255,255,.26)';
+    [[0.28,0.3],[0.7,0.38],[0.45,0.68],[0.78,0.74]].forEach(([a,b])=>{ g.beginPath(); g.arc(s*a,s*b,s*0.1,0,6.283); g.fill(); }); }
+  else if(f==='vein'){ g.beginPath(); g.moveTo(s*0.2,s*0.82); g.quadraticCurveTo(s*0.5,s*0.4,s*0.82,s*0.2); g.stroke();
+    g.lineWidth=Math.max(1,s*0.03); [[0.36,0.62],[0.52,0.46],[0.66,0.34]].forEach(([a,b])=>{ g.beginPath(); g.moveTo(s*a,s*b); g.lineTo(s*(a+0.14),s*(b+0.04)); g.stroke(); }); }
+  else if(f==='wave'){ for(let i=0;i<3;i++){ const y=s*(0.26+i*0.24); g.beginPath(); g.moveTo(s*0.08,y);
+      g.quadraticCurveTo(s*0.32,y-s*0.1,s*0.54,y); g.quadraticCurveTo(s*0.76,y+s*0.1,s*0.94,y); g.stroke(); } }
+  else if(f==='star'){ g.save(); g.translate(s*0.52,s*0.46);
+    for(let i=0;i<4;i++){ g.rotate(Math.PI/4); g.beginPath(); g.moveTo(0,-s*0.3); g.lineTo(0,s*0.3); g.stroke(); } g.restore(); }
+  else { for(let i=1;i<=3;i++){ g.beginPath(); g.arc(s*0.18,s*0.84,s*0.22*i,-1.2,0.25); g.stroke(); } }
+  g.restore();
+  // блик в верхней трети
+  g.save(); path(); g.clip();
+  glossSpot(g, s*0.3, s*0.26, s*0.34, 0.55);
+  g.restore();
+  // тень по нижнему краю, зажатая внутри силуэта
+  rimShade(g, path, s*0.52, s, 0.34);
+  // свинцовый контур
+  g.strokeStyle='rgba(58,42,32,.92)'; g.lineWidth=Math.max(1.6,s*0.075); path(); g.stroke();
+  g.strokeStyle='rgba(255,255,255,.22)'; g.lineWidth=Math.max(1,s*0.03);
+  rrect(g, 1.8, 1.8, s-3.6, s-3.6, r*0.8); g.stroke();
+  const spr={canvas:c, pad};
+  spriteCache[key]=spr;
+  return spr;
+}
+function drawGlass(g, x, y, size, ci, alpha){
+  const spr=glassSprite(ci, size);
+  if(alpha!=null && alpha<1){ g.save(); g.globalAlpha=alpha; }
+  g.drawImage(spr.canvas, x-spr.pad, y-spr.pad, size+spr.pad*2, size+spr.pad*2);
+  if(alpha!=null && alpha<1) g.restore();
+}
+function drawPiece(g, shapeIdx, ci, x, y, size, alpha){
+  const sh=SHAPES[shapeIdx];
+  for(const [dx,dy] of sh.c) drawGlass(g, x+dx*size, y+dy*size, size, ci, alpha);
+}
+
+// ---------- Витражи-коллекция: 9 уникальных мотивов ----------
+// Каждый — арочная панель со свинцовыми перегородками и своим силуэтом;
+// читается в миниатюре 50-70 px (галерея/офлайн-строки).
+function panelFrame(g,w,h){
+  g.beginPath();
+  g.moveTo(-w/2, h/2);
+  g.lineTo(-w/2, -h/2+w*0.42);
+  g.quadraticCurveTo(-w/2, -h/2, 0, -h/2);
+  g.quadraticCurveTo(w/2, -h/2, w/2, -h/2+w*0.42);
+  g.lineTo(w/2, h/2); g.closePath();
+}
+function drawPanelArt(g, idx, cx, cy, s, owned){
+  const p=PANELS[Math.min(idx,PANELS.length-1)];
+  const w=Math.max(10, 52*s), h=Math.max(12, 62*s);
+  g.save(); g.translate(cx,cy);
+  // фон панели — свет сквозь стекло
+  g.save(); panelFrame(g,w,h); g.clip();
+  const bgG=g.createLinearGradient(0,-h/2,0,h/2);
+  if(owned){ bgG.addColorStop(0,'#FFE7B0'); bgG.addColorStop(1,'#F4B36A'); }
+  else { bgG.addColorStop(0,'#CFC3B0'); bgG.addColorStop(1,'#A79781'); }
+  g.fillStyle=bgG; g.fillRect(-w/2,-h/2,w,h);
+  const C=(hex,a)=> owned? rgba(hex,a==null?0.92:a) : 'rgba(150,138,120,'+(a==null?0.8:a)+')';
+  const L=()=>{ g.strokeStyle='rgba(58,42,32,.85)'; g.lineWidth=Math.max(1,1.7*s); };
+  L();
+  if(p.id==='rose'){
+    for(let i=0;i<6;i++){ const a=i*Math.PI/3;
+      g.fillStyle=C(i%2?'#D8486A':'#A472D6');
+      g.beginPath(); g.ellipse(Math.cos(a)*w*0.21, -h*0.06+Math.sin(a)*w*0.21, w*0.17, w*0.11, a, 0, 6.283); g.fill(); g.stroke(); }
+    g.fillStyle=C('#F2A63C'); g.beginPath(); g.arc(0,-h*0.06,w*0.12,0,6.283); g.fill(); g.stroke();
+    g.fillStyle=C('#5FB87A'); g.beginPath(); g.moveTo(0,h*0.1); g.lineTo(0,h*0.42); g.lineWidth=Math.max(1.4,2.4*s); g.strokeStyle=C('#3E8A4E'); g.stroke(); L();
+    g.fillStyle=C('#5FB87A'); g.beginPath(); g.ellipse(-w*0.14,h*0.22,w*0.12,w*0.06,-0.5,0,6.283); g.fill(); g.stroke();
+  } else if(p.id==='sun'){
+    for(let i=0;i<10;i++){ const a=i*Math.PI/5; g.fillStyle=C('#F2A63C');
+      g.beginPath(); g.moveTo(Math.cos(a)*w*0.16,-h*0.04+Math.sin(a)*w*0.16);
+      g.lineTo(Math.cos(a+0.26)*w*0.4,-h*0.04+Math.sin(a+0.26)*w*0.4);
+      g.lineTo(Math.cos(a-0.26)*w*0.4,-h*0.04+Math.sin(a-0.26)*w*0.4); g.closePath(); g.fill(); g.stroke(); }
+    g.fillStyle=C('#F7D37A'); g.beginPath(); g.arc(0,-h*0.04,w*0.2,0,6.283); g.fill(); g.stroke();
+    glossSpot(g,-w*0.06,-h*0.1,w*0.1,0.5);
+  } else if(p.id==='crane'){
+    g.fillStyle=C('#4E93D6'); g.fillRect(-w/2,-h*0.1,w,h*0.6);
+    g.fillStyle=C('#FFF3DA'); g.beginPath();
+    g.moveTo(-w*0.3,h*0.08); g.quadraticCurveTo(0,-h*0.26,w*0.3,-h*0.02);
+    g.quadraticCurveTo(w*0.06,h*0.04,-w*0.3,h*0.08); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(w*0.22,-h*0.03); g.lineTo(w*0.42,-h*0.16); g.lineTo(w*0.3,-h*0.01); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle=C('#D8486A',0.9); g.lineWidth=Math.max(1,1.6*s);
+    g.beginPath(); g.moveTo(-w*0.26,h*0.09); g.lineTo(-w*0.36,h*0.26); g.stroke(); L();
+  } else if(p.id==='boat'){
+    g.fillStyle=C('#4E93D6'); g.fillRect(-w/2,h*0.08,w,h*0.42);
+    g.fillStyle=C('#FFF3DA'); g.beginPath(); g.moveTo(0,-h*0.32); g.lineTo(0,h*0.06); g.lineTo(-w*0.3,h*0.06); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=C('#D8486A'); g.beginPath(); g.moveTo(w*0.04,-h*0.26); g.lineTo(w*0.04,h*0.06); g.lineTo(w*0.3,h*0.06); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=C('#8E5A34'); g.beginPath(); g.moveTo(-w*0.34,h*0.08); g.lineTo(w*0.34,h*0.08); g.lineTo(w*0.22,h*0.2); g.lineTo(-w*0.22,h*0.2); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle=C('#2E6E9E',0.8); g.lineWidth=Math.max(1,1.5*s);
+    g.beginPath(); g.moveTo(-w*0.36,h*0.32); g.quadraticCurveTo(0,h*0.24,w*0.36,h*0.32); g.stroke(); L();
+  } else if(p.id==='apple'){
+    g.fillStyle=C('#8E5A34'); g.fillRect(-w*0.05,-h*0.02,w*0.1,h*0.4); g.strokeRect(-w*0.05,-h*0.02,w*0.1,h*0.4);
+    g.fillStyle=C('#5FB87A'); g.beginPath(); g.arc(0,-h*0.16,w*0.3,0,6.283); g.fill(); g.stroke();
+    g.fillStyle=C('#D8486A'); [[-0.13,-0.2],[0.14,-0.12],[0.02,-0.3]].forEach(([a,b])=>{
+      g.beginPath(); g.arc(w*a,h*b,w*0.07,0,6.283); g.fill(); g.stroke(); });
+    g.fillStyle=C('#3E8A4E'); g.beginPath(); g.ellipse(0,h*0.4,w*0.3,h*0.05,0,0,6.283); g.fill(); g.stroke();
+  } else if(p.id==='moon'){
+    g.fillStyle=C('#2E2A5A'); g.fillRect(-w/2,-h/2,w,h);
+    g.fillStyle=C('#F7E39A'); g.beginPath(); g.arc(w*0.06,-h*0.08,w*0.26,0,6.283); g.fill();
+    // полумесяц вырезаем «ночным» стеклом поверх, не destination-out (иначе дыра в канвасе)
+    g.fillStyle=C('#2E2A5A'); g.beginPath(); g.arc(w*0.2,-h*0.16,w*0.23,0,6.283); g.fill();
+    g.beginPath(); g.arc(w*0.06,-h*0.08,w*0.26,0,6.283); g.stroke();
+    g.fillStyle=C('#FFF3DA'); [[-0.3,-0.26,0.05],[-0.22,0.1,0.04],[0.3,0.22,0.045],[0.1,0.3,0.035]].forEach(([a,b,r])=>{
+      g.beginPath(); for(let i=0;i<4;i++){ const an=i*Math.PI/2;
+        g.lineTo(w*a+Math.cos(an)*w*r*2, h*b+Math.sin(an)*w*r*2);
+        g.lineTo(w*a+Math.cos(an+0.785)*w*r*0.7, h*b+Math.sin(an+0.785)*w*r*0.7); }
+      g.closePath(); g.fill(); });
+  } else if(p.id==='fish'){
+    g.fillStyle=C('#3FB3A8'); g.fillRect(-w/2,-h/2,w,h);
+    g.fillStyle=C('#F2A63C'); g.beginPath(); g.ellipse(-w*0.04,0,w*0.26,h*0.17,0,0,6.283); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(w*0.18,0); g.lineTo(w*0.4,-h*0.14); g.lineTo(w*0.4,h*0.14); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=C('#FFF3DA'); g.beginPath(); g.arc(-w*0.16,-h*0.03,w*0.05,0,6.283); g.fill();
+    g.fillStyle='rgba(40,28,20,.8)'; g.beginPath(); g.arc(-w*0.16,-h*0.03,w*0.024,0,6.283); g.fill();
+    g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=Math.max(1,1.4*s);
+    [[-0.22,-0.3,0.05],[-0.1,-0.4,0.035]].forEach(([a,b,r])=>{ g.beginPath(); g.arc(w*a,h*b,w*r,0,6.283); g.stroke(); }); L();
+  } else if(p.id==='bell'){
+    g.fillStyle=C('#5FB87A'); g.lineWidth=Math.max(1.4,2.2*s); g.strokeStyle=C('#3E8A4E');
+    g.beginPath(); g.moveTo(w*0.02,h*0.44); g.quadraticCurveTo(-w*0.06,h*0.05,0,-h*0.16); g.stroke(); L();
+    g.fillStyle=C('#A472D6'); g.beginPath();
+    g.moveTo(-w*0.2,-h*0.18); g.quadraticCurveTo(-w*0.26,h*0.16,0,h*0.2);
+    g.quadraticCurveTo(w*0.26,h*0.16,w*0.2,-h*0.18);
+    g.quadraticCurveTo(0,-h*0.3,-w*0.2,-h*0.18); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=C('#F7D37A'); g.beginPath(); g.arc(0,h*0.22,w*0.06,0,6.283); g.fill(); g.stroke();
+    g.fillStyle=C('#5FB87A'); g.beginPath(); g.ellipse(-w*0.2,h*0.3,w*0.14,w*0.06,-0.4,0,6.283); g.fill(); g.stroke();
+  } else {
+    g.fillStyle=C('#4E93D6'); g.fillRect(-w/2,-h/2,w,h);
+    g.fillStyle=C('#5FB87A');
+    g.beginPath(); g.moveTo(-w*0.26,h*0.3);
+    g.quadraticCurveTo(-w*0.36,-h*0.1,0,-h*0.2);
+    g.quadraticCurveTo(w*0.34,-h*0.28,w*0.28,h*0.04);
+    g.quadraticCurveTo(w*0.22,h*0.26,0,h*0.16);
+    g.quadraticCurveTo(-w*0.1,h*0.12,-w*0.26,h*0.3); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=C('#F2A63C'); g.beginPath();
+    g.moveTo(-w*0.04,-h*0.2); g.lineTo(w*0.06,-h*0.36); g.lineTo(w*0.16,-h*0.2); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=C('#D8486A'); g.beginPath(); g.ellipse(w*0.18,-h*0.04,w*0.1,w*0.06,0.6,0,6.283); g.fill(); g.stroke();
+    g.fillStyle='rgba(255,255,255,.9)'; g.beginPath(); g.arc(w*0.2,-h*0.14,w*0.045,0,6.283); g.fill();
+    g.fillStyle='rgba(40,28,20,.85)'; g.beginPath(); g.arc(w*0.205,-h*0.14,w*0.022,0,6.283); g.fill();
+  }
+  // свет внутри панели
+  if(owned) glossSpot(g, -w*0.18, -h*0.3, w*0.4, 0.3);
+  g.restore();
+  // свинцовая оправа панели
+  g.strokeStyle='rgba(58,42,32,.95)'; g.lineWidth=Math.max(1.8,2.6*s);
+  panelFrame(g,w,h); g.stroke();
+  g.strokeStyle='rgba(255,255,255,.22)'; g.lineWidth=Math.max(1,1.2*s);
+  panelFrame(g,w-3*s,h-3*s); g.stroke();
+  g.restore();
+}
+function drawMedal(){
+  const c=$("medalThumb"), g=c.getContext('2d');
+  g.setTransform(2,0,0,2,0,0); g.clearRect(0,0,46,46);
+  const idx=Math.min(S.panel, PANELS.length-1);
+  g.fillStyle='#2E2238'; g.beginPath(); g.arc(23,23,23,0,6.283); g.fill();
+  g.save(); g.beginPath(); g.arc(23,23,22,0,6.283); g.clip();
+  drawPanelArt(g, idx, 23, 24, 0.66, true);
+  g.restore();
+}
+
+// ---------- Мышка-подмастерье Бусинка ----------
+function drawMouse(g,x,y,s,t,cheer){
+  const br=Math.sin(t*1.9)*0.028+1;                  // дыхание
+  const lift=cheer>0? Math.abs(Math.sin(cheer*8))*5*s : 0;
+  g.save(); g.translate(x,y-lift); g.scale(s,s*br);
+  g.fillStyle='rgba(60,40,26,.22)'; ell(g,0,2,15,4); g.fill();
+  const body='#C9BCCE', ear='#EEB9C6';
+  g.strokeStyle=INK; g.lineWidth=2.2; g.lineJoin='round';
+  // хвост
+  g.strokeStyle='#B3A2B8'; g.lineWidth=3;
+  g.beginPath(); g.moveTo(9,-4); g.quadraticCurveTo(22,-2+Math.sin(t*2.4)*3,18,-16); g.stroke();
+  g.strokeStyle=INK; g.lineWidth=2.2;
+  // тело
+  g.fillStyle=vertFill(g,-22,0,body); ell(g,0,-10,13,12); g.fill(); g.stroke();
+  rimShade(g, ()=>ell(g,0,-10,13,12), -4, 2, 0.28);
+  // лапки
+  g.fillStyle=shade(body,-0.1); ell(g,-6,0,4,2.6); g.fill(); g.stroke(); ell(g,6,0,4,2.6); g.fill(); g.stroke();
+  // ушки
+  g.fillStyle=sphereFill(g,-9,-24,6,body); g.beginPath(); g.arc(-9,-24,6.4,0,6.283); g.fill(); g.stroke();
+  g.fillStyle=sphereFill(g,9,-24,6,body); g.beginPath(); g.arc(9,-24,6.4,0,6.283); g.fill(); g.stroke();
+  g.fillStyle=ear; g.beginPath(); g.arc(-9,-24,3.4,0,6.283); g.fill();
+  g.beginPath(); g.arc(9,-24,3.4,0,6.283); g.fill();
+  // голова
+  g.fillStyle=sphereFill(g,0,-21,11,shade(body,0.08)); ell(g,0,-21,10.5,9.5); g.fill(); g.stroke();
+  glossSpot(g,-3.5,-25,4.5,0.5);
+  // мордочка
+  g.fillStyle='#F2E2E8'; ell(g,0,-17,5.4,4.2); g.fill();
+  g.fillStyle='#E38AA0'; ell(g,0,-19.4,1.9,1.5); g.fill();
+  g.strokeStyle=rgba('#4A3426',0.7); g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(0,-18); g.lineTo(0,-16.4); g.moveTo(0,-16.4); g.quadraticCurveTo(-2.2,-15.6,-3.2,-16.6);
+  g.moveTo(0,-16.4); g.quadraticCurveTo(2.2,-15.6,3.2,-16.6); g.stroke();
+  // усики
+  g.strokeStyle='rgba(74,52,38,.55)'; g.lineWidth=1;
+  [[-1,-1],[1,1]].forEach(([d,k])=>{ g.beginPath(); g.moveTo(3.4*k,-18.6); g.lineTo(10*k,-20.4+d*0.6); g.stroke();
+    g.beginPath(); g.moveTo(3.4*k,-17.6); g.lineTo(10*k,-16.6); g.stroke(); });
+  // глаза: белок + радужка + зрачок + двойной блик
+  const blink = (Math.sin(t*0.7)>0.985)?0.12:1;
+  [[-4.4,-22.6],[4.4,-22.6]].forEach(([ex,ey])=>{
+    g.fillStyle='#fff'; ell(g,ex,ey,2.9,3.1*blink); g.fill(); g.strokeStyle=INK; g.lineWidth=1.3; g.stroke();
+    if(blink>0.5){
+      g.fillStyle='#6B4A8A'; ell(g,ex+0.2,ey+0.3,1.9,2.1); g.fill();
+      g.fillStyle='#231A2E'; ell(g,ex+0.2,ey+0.5,1.05,1.2); g.fill();
+      g.fillStyle='#fff'; ell(g,ex-0.7,ey-0.9,0.8,0.9); g.fill(); ell(g,ex+1,ey+1,0.4,0.45); g.fill();
+    }
+  });
+  // румянец
+  g.fillStyle='rgba(226,120,140,.3)'; ell(g,-7.4,-18.4,2.6,1.7); g.fill(); ell(g,7.4,-18.4,2.6,1.7); g.fill();
+  // полоска свинца в лапках
+  g.strokeStyle='#8E99A4'; g.lineWidth=2.4; g.beginPath(); g.moveTo(-8,-6); g.lineTo(8,-9); g.stroke();
+  g.strokeStyle=rgba('#4A3426',0.7); g.lineWidth=0.9; g.beginPath(); g.moveTo(-8,-6); g.lineTo(8,-9); g.stroke();
+  g.restore();
+  if(cheer>0.02){
+    g.save(); g.globalAlpha=Math.min(1,cheer); g.font='900 '+Math.round(13*s)+'px Nunito, sans-serif';
+    g.textAlign='center'; g.lineWidth=3; g.strokeStyle='#FFF6E4'; g.fillStyle='#C96FA8';
+    const txt=lang()==="ru"?"Ух ты!":"Wow!";
+    const tx=Math.max(colX+34, Math.min(colX+colW-34, x+34*s));
+    g.strokeText(txt, tx, y-52*s-lift); g.fillText(txt, tx, y-52*s-lift); g.restore();
+  }
+}
+function drawNamePlate(x,y,text){
+  ctx.font='900 12px Nunito, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const w=ctx.measureText(text).width+16;
+  ctx.fillStyle='rgba(255,246,228,.94)'; ctx.strokeStyle=INK; ctx.lineWidth=2;
+  rrect(ctx,x-w/2,y-9,w,18,9); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=INK; ctx.fillText(text,x,y+0.5);
+}
+
+// ---------- Гирлянда готовых витражей (живой, покачивающийся элемент) ----------
+let garlandPop=0;
+function drawGarland(t){
+  const x0=colX+34, x1=colX+colW-56, y=cordY;
+  ctx.strokeStyle='rgba(74,52,38,.75)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x0-18,y-10);
+  ctx.quadraticCurveTo((x0+x1)/2, y+8+Math.sin(t*0.8)*1.5, x1+10, y-12);
+  ctx.stroke();
+  const n=PANELS.length;
+  const step=(x1-x0)/Math.max(1,n-1);
+  const ps=Math.min(step*0.56, archH*0.4, 26)/52;      // масштаб мини-панели
+  for(let i=0;i<n;i++){
+    const owned=S.panels.includes(PANELS[i].id);
+    const x=x0+i*step;
+    const sag=Math.sin((x-x0)/(x1-x0)*Math.PI)*8;
+    const sway=Math.sin(t*1.1+i*0.7)*0.05;
+    const pop=(garlandPop>0 && i===S.done-1)? 1+garlandPop*0.25 : 1;
+    ctx.save(); ctx.translate(x, y+sag+2); ctx.rotate(sway);
+    ctx.strokeStyle='rgba(74,52,38,.7)'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(0,-2); ctx.lineTo(0, 7*ps*52*0.1); ctx.stroke();
+    if(owned){
+      drawPanelArt(ctx, i, 0, 34*ps*pop, ps*pop, true);
+      // редкая искра на готовом витраже
+      const tw=Math.sin(t*2+i*2.1);
+      if(tw>0.92){ ctx.fillStyle='rgba(255,246,206,.9)';
+        ctx.beginPath(); ctx.arc(6*ps*52*0.1, 28*ps, 2.4, 0, 6.283); ctx.fill(); }
+    } else {
+      ctx.globalAlpha=0.33;
+      ctx.strokeStyle='rgba(74,52,38,.55)'; ctx.lineWidth=1.6;
+      ctx.save(); ctx.translate(0,34*ps); ctx.scale(ps,ps); panelFrame(ctx,52,62); ctx.restore(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+// ---------- Лампа над верстаком ----------
+function drawLamp(t){
+  const x=colX+colW-26, y=cordY-6, pulse=1+Math.sin(t*1.6)*0.06;
+  ctx.strokeStyle='rgba(74,52,38,.8)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,y); ctx.stroke();
+  const lg=ctx.createRadialGradient(x,y+16,2,x,y+16,64*pulse);
+  lg.addColorStop(0,'rgba(255,232,160,.5)'); lg.addColorStop(1,'rgba(255,232,160,0)');
+  ctx.fillStyle=lg; ctx.beginPath(); ctx.arc(x,y+16,64*pulse,0,6.283); ctx.fill();
+  ctx.fillStyle=vertFill(ctx,y,y+16,'#D8B35A'); ctx.strokeStyle=INK; ctx.lineWidth=2.2; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(x-15,y+15); ctx.lineTo(x-7,y); ctx.lineTo(x+7,y); ctx.lineTo(x+15,y+15); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle='rgba(255,243,190,'+(0.85*pulse)+')'; ctx.beginPath(); ctx.arc(x,y+17,5.5,0,6.283); ctx.fill();
+  ctx.strokeStyle=rgba('#A8731E',0.8); ctx.lineWidth=1.6; ctx.stroke();
+  glossSpot(ctx,x-5,y+5,5,0.45);
+}
+// ---------- Ласточка за окном ----------
+function drawSwallow(g,x,y,s,t){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  const f=Math.sin(t*11)*0.5;
+  g.fillStyle='rgba(58,44,70,.85)'; g.strokeStyle='rgba(58,44,70,.9)'; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(0,0);
+  g.quadraticCurveTo(-7,-5-f*5,-15,-2-f*3); g.quadraticCurveTo(-8,1,0,2);
+  g.quadraticCurveTo(8,1,15,-2+f*3); g.quadraticCurveTo(7,-5+f*5,0,0); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(-1,1); g.lineTo(-5,6); g.lineTo(2,2); g.closePath(); g.fill();
+  g.restore();
+}
+function drawCloud(g,x,y,s,a){
+  g.save(); g.globalAlpha=a==null?0.5:a;
+  g.fillStyle='rgba(255,236,214,.85)';
+  g.beginPath();
+  g.arc(x,y,13*s,0,6.283); g.arc(x+15*s,y+3*s,10*s,0,6.283); g.arc(x-15*s,y+4*s,9*s,0,6.283); g.arc(x+5*s,y-7*s,9*s,0,6.283);
+  g.fill(); g.restore();
+}
+
+// ---------- Поле, лоток, перетаскивание ----------
+let beams=[], mouseCheer=0;
+function drawBoard(t){
+  // стекло в ячейках
+  for(let i=0;i<N*N;i++){
+    const ci=S.grid[i]; if(ci<0) continue;
+    const x=gridX+(i%N)*cs, y=gridY+Math.floor(i/N)*cs;
+    drawGlass(ctx, x, y, cs, ci);
+  }
+  // призрак перетаскиваемого осколка
+  if(drag && drag.cell){
+    const sh=SHAPES[drag.s];
+    const ok=drag.ok;
+    for(const [dx,dy] of sh.c){
+      const c=drag.cell.col+dx, r=drag.cell.row+dy;
+      if(c<0||r<0||c>=N||r>=N) continue;
+      const x=gridX+c*cs, y=gridY+r*cs;
+      if(ok) drawGlass(ctx, x, y, cs, drag.c, 0.45);
+      ctx.strokeStyle= ok? 'rgba(255,246,206,.95)' : 'rgba(216,72,106,.85)';
+      ctx.lineWidth=2.4; rrect(ctx,x+2,y+2,cs-4,cs-4,cs*0.16); ctx.stroke();
+    }
+  }
+  // лучи света из спаянных рядов
+  beams.forEach(b=>{
+    const a=Math.max(0, 1-b.t/0.75);
+    ctx.save(); ctx.globalAlpha=a;
+    if(b.row!=null){
+      const y=gridY+b.row*cs;
+      const lg=ctx.createLinearGradient(0,y,0,y+cs);
+      lg.addColorStop(0,'rgba(255,246,206,0)'); lg.addColorStop(0.5,'rgba(255,246,206,.95)'); lg.addColorStop(1,'rgba(255,246,206,0)');
+      ctx.fillStyle=lg; ctx.fillRect(gridX-cs*0.3, y, B+cs*0.6, cs);
+    } else {
+      const x=gridX+b.col*cs;
+      const lg=ctx.createLinearGradient(x,0,x+cs,0);
+      lg.addColorStop(0,'rgba(255,246,206,0)'); lg.addColorStop(0.5,'rgba(255,246,206,.95)'); lg.addColorStop(1,'rgba(255,246,206,0)');
+      ctx.fillStyle=lg; ctx.fillRect(x, gridY-cs*0.3, cs, B+cs*0.6);
+    }
+    ctx.restore();
+  });
+}
+// размер клетки осколка в лотке: длинные фигуры ужимаются, чтобы не вылезать из гнезда
+function trayCell(sh, r){ return Math.min(tcs, (r.w-16)/sh.w, (r.h-16)/sh.h); }
+function drawTray(t){
+  for(let k=0;k<3;k++){
+    const p=S.tray[k]; if(!p) continue;
+    if(drag && drag.ti===k) continue;
+    const sh=SHAPES[p[0]], r=slotRect(k), ps=trayCell(sh,r);
+    const x=r.x + (r.w - sh.w*ps)/2, y=r.y + (r.h - sh.h*ps)/2;
+    const bob=Math.sin(t*1.3+k*1.7)*1.2;
+    drawPiece(ctx, p[0], p[1], x, y+bob, ps);
+  }
+}
+function drawDragPiece(){
+  if(!drag) return;
+  const sh=SHAPES[drag.s], size=drag.size;
+  drawPiece(ctx, drag.s, drag.c, drag.x - sh.w*size/2, drag.y - sh.h*size/2 - drag.lift, size);
+}
+
+// ---------- Частицы + всплывающая награда ----------
+let particles=[], texts=[];
+function burstFx(x,y,col,label,n){
+  if(catchUp) return;
+  n=n||12;
+  for(let i=0;i<n;i++){ const a=Math.random()*6.283, v=50+Math.random()*130;
+    particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-70,life:0.7+Math.random()*0.4,r:1.6+Math.random()*2.6,
+      col: Math.random()<0.3?'#FFF2C8':col}); }
+  if(label) texts.push({x,y,label,life:1.1});
+  if(particles.length>420) particles.splice(0,particles.length-420);
+}
+function updateFx(dt){
+  particles.forEach(p=>{ p.vy+=250*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; });
+  particles=particles.filter(p=>p.life>0);
+  texts.forEach(t=>{ t.y-=42*dt; t.life-=dt; }); texts=texts.filter(t=>t.life>0);
+}
+function drawFx(){
+  particles.forEach(p=>{ ctx.globalAlpha=Math.min(1,p.life*1.5); ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.283); ctx.fill(); });
+  ctx.globalAlpha=1;
+  texts.forEach(t=>{ ctx.globalAlpha=Math.min(1,t.life*1.5); ctx.font='900 23px Nunito, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.lineWidth=4.5; ctx.strokeStyle='#FFF6E4'; ctx.strokeText(t.label,t.x,t.y);
+    ctx.fillStyle='#8E4A2E'; ctx.fillText(t.label,t.x,t.y); });
+  ctx.globalAlpha=1;
+}
+
+// ---------- Ввод: перетаскивание осколка из лотка в раму ----------
+let drag=null;
+function trayHit(x,y){
+  for(let k=0;k<3;k++){
+    if(!S.tray[k]) continue;
+    const r=slotRect(k);
+    if(x>=r.x-6 && x<=r.x+r.w+6 && y>=r.y-10 && y<=r.y+r.h+10) return k;
+  }
+  return -1;
+}
+function dragCell(){
+  if(!drag) return null;
+  const sh=SHAPES[drag.s];
+  const px=drag.x - sh.w*cs/2, py=drag.y - sh.h*cs/2 - drag.lift;
+  const col=Math.round((px-gridX)/cs), row=Math.round((py-gridY)/cs);
+  return {col,row};
+}
+function pointerPos(e){ const rc=cv.getBoundingClientRect(); return {x:e.clientX-rc.left, y:e.clientY-rc.top}; }
+cv.addEventListener('pointerdown', e=>{
+  if(!booted || anyModal() || phase!=='play') return;
+  const p=pointerPos(e);
+  const k=trayHit(p.x,p.y);
+  if(k<0) return;
+  const piece=S.tray[k];
+  const touch = e.pointerType!=='mouse';
+  drag={ti:k, s:piece[0], c:piece[1], x:p.x, y:p.y, size:cs, lift: touch? cs*0.9 : cs*0.2, cell:null, ok:false};
+  drag.cell=dragCell(); drag.ok=canPlace(drag.s, drag.cell.col, drag.cell.row);
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+  sfx("tap");
+});
+cv.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  const p=pointerPos(e);
+  drag.x=p.x; drag.y=p.y;
+  drag.cell=dragCell(); drag.ok=canPlace(drag.s, drag.cell.col, drag.cell.row);
+});
+function endDrag(place){
+  if(!drag) return;
+  const d=drag; drag=null;
+  if(place && d.cell && canPlace(d.s, d.cell.col, d.cell.row)) placePiece(d.ti, d.cell.col, d.cell.row);
+  refreshHud();
+}
+cv.addEventListener('pointerup', e=>{ endDrag(true); });
+cv.addEventListener('pointercancel', ()=>{ endDrag(false); });
+
+// ---------- Кадр ----------
+let lastT=performance.now(), prodAcc=0, tipAcc=0, hudAcc=0;
+let clouds=[{x:0.2,y:0.2,s:0.8},{x:0.65,y:0.12,s:0.6},{x:0.42,y:0.3,s:0.5}];
+let swallow={t:-1,y:0,dir:1};
+let motes=null;
+function frame(now){
+  const dt=Math.max(0,Math.min(0.05,(now-lastT)/1000)); lastT=now;
+  const t=now/1000;
+  // свет гирлянды в реальном времени
+  const ip=ips();
+  if(ip>0){ prodAcc+=dt; if(prodAcc>=1){ earn(ip*prodAcc*boostMul()); prodAcc=0; persist(); } }
+  if(hudDirty) refreshHud();
+  hudAcc+=dt; if(hudAcc>0.5){ hudAcc=0; if(boostOn()||$("boostBtn").classList.contains("on")) refreshHud(); }
+  tipAcc+=dt; if(tipAcc>1){ tipAcc=0; tipTick(); }
+  if(mouseCheer>0) mouseCheer=Math.max(0,mouseCheer-dt);
+  if(garlandPop>0) garlandPop=Math.max(0,garlandPop-dt*1.6);
+  beams.forEach(b=>b.t+=dt); beams=beams.filter(b=>b.t<0.75);
+  clouds.forEach(c=>{ c.x+=dt*0.008*(0.6+c.s); if(c.x>1.3) c.x=-0.3; });
+  if(swallow.t<0 && Math.random()<dt*0.09){ swallow={t:0, y:0.2+Math.random()*0.4, dir: Math.random()<0.5?1:-1}; }
+  if(swallow.t>=0){ swallow.t+=dt*0.28; if(swallow.t>1.1) swallow.t=-1; }
+  if(!motes){ motes=[]; for(let i=0;i<22;i++) motes.push({x:Math.random(),y:Math.random(),ph:Math.random()*6.3,sp:0.2+Math.random()*0.5}); }
+  updateFx(dt);
+
+  ctx.clearRect(0,0,W,H);
+  if(bgCan) ctx.drawImage(bgCan,0,0,W,H);
+
+  // за окном: облака и ласточка (строго внутри проёма)
+  ctx.save();
+  const oy=gridY-archH, ox=gridX-cs*0.18, ow=B+cs*0.36, oh=B+archH+cs*0.2;
+  ctx.beginPath();
+  ctx.moveTo(ox, oy+archH);
+  ctx.quadraticCurveTo(ox, oy, ox+ow/2, oy);
+  ctx.quadraticCurveTo(ox+ow, oy, ox+ow, oy+archH);
+  ctx.lineTo(ox+ow, oy+oh); ctx.lineTo(ox, oy+oh); ctx.closePath();
+  ctx.clip();
+  clouds.forEach(c=>drawCloud(ctx, ox+ow*c.x, oy+oh*c.y, c.s*Math.max(0.6,ow/360), 0.45));
+  if(swallow.t>=0){
+    const prog=swallow.dir>0? swallow.t : 1-swallow.t;
+    drawSwallow(ctx, ox-20+prog*(ow+40), oy+oh*swallow.y+Math.sin(swallow.t*7)*10,
+      Math.max(0.5,ow/420)*0.9, t);
+  }
+  ctx.restore();
+
+  drawBoard(t);
+  drawGarland(t);
+  drawLamp(t);
+
+  // пылинки в тёплом свете лампы
+  const lx=colX+colW-26, ly=cordY+10;
+  ctx.fillStyle='rgba(255,240,200,.55)';
+  motes.forEach(m=>{
+    const a=t*m.sp+m.ph;
+    const x=lx-10-m.x*120, y=ly+20+m.y*(sillY-ly)*0.8+Math.sin(a)*10;
+    if(y>H-10) return;
+    ctx.globalAlpha=0.22+0.3*(0.5+0.5*Math.sin(a*1.7));
+    ctx.beginPath(); ctx.arc(x,y,1.5,0,6.283); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  drawTray(t);
+  // Бусинка сидит на левом краю рамы (лампа — на правом, сцена уравновешена)
+  const ms=Math.min(1.25, cs/34);
+  const mx=gridX+cs*0.38;
+  drawMouse(ctx, mx, gridY-4, ms, t, mouseCheer);
+  if(cs>34) drawNamePlate(mx+18*ms, gridY-42*ms, T("mouse"));
+  drawDragPiece();
+  drawFx();
+  requestAnimationFrame(frame);
+}
+
+// ---------- Тест-хуки (Playwright / симулятор баланса) ----------
+window.render_game_to_text = () => JSON.stringify({
+  coins:S.shards, shards:S.shards, lifetime:S.lifetime,
+  lvl:S.up.cut+S.up.lamp+S.up.lead, up:Object.assign({},S.up), upCost:upCost(),
+  panel:S.panel, lines:S.lines, need:needNow(), done:S.done, panels:S.panels.slice(),
+  ips:ips(), filled:S.grid.filter(v=>v>=0).length, grid:S.grid.slice(),
+  tray:S.tray.map(p=>p?p.slice():null), fits:S.tray.map(p=>p?fitsAnywhere(p[0]):false),
+  sweeps:S.sweeps, boost:boostOn(), streak:S.streak, lastClaimDay:S.lastClaimDay,
+  gamePhase:phase, lang:lang(), tips:Object.keys(S.tips),
+  modals:[...document.querySelectorAll('.modal.open')].map(m=>m.id)
+});
+window.advanceTime = ms => applyAway(ms/1000, 'sim');
+window.__cellCenter = i => { const c=cellCenter(i); return {x:c.x,y:c.y}; };
+window.__slotCenter = k => { const r=slotRect(k); return {x:r.x+r.w/2, y:r.y+r.h/2}; };
+window.__cellSize = () => cs;
+window.__canPlace = (ti,col,row) => !!(S.tray[ti] && canPlace(S.tray[ti][0],col,row));
+window.__place = (ti,col,row) => placePiece(ti,col,row,true);
+// первая подходящая позиция для осколка из лотка (для тестов и автоплея)
+window.__firstFit = ti => {
+  const p=S.tray[ti]; if(!p) return null;
+  const sh=SHAPES[p[0]];
+  for(let r=0;r<=N-sh.h;r++) for(let c=0;c<=N-sh.w;c++) if(canPlace(p[0],c,r)) return {col:c,row:r};
+  return null;
+};
+// точка, в которую нужно отпустить палец/курсор, чтобы осколок лёг в клетку (col,row)
+window.__dropPoint = (ti,col,row,touch) => {
+  const p=S.tray[ti]; if(!p) return null;
+  const sh=SHAPES[p[0]], lift = touch? cs*0.9 : cs*0.2;
+  return {x: gridX+col*cs + sh.w*cs/2, y: gridY+row*cs + sh.h*cs/2 + lift};
+};
+window.__setGrid = arr => { S.grid=arr.slice(0,N*N); refreshHud(); };
+window.__setTray = arr => { S.tray=arr.map(p=>p?p.slice():null); refreshHud(); };
+window.__grant = n => { grant(n); refreshHud(); };
+window.__buy = id => buyTool(id);
+window.__phase = () => phase;
+window.__checkStuck = () => checkStuck();
+window.__freezeSave = () => { saveFrozen=true; };
+window.__saveNow = () => persist(true);
+window.__fillAllBut = (keep) => {   // заполнить поле, оставив `keep` пустых клеток в нижнем ряду
+  S.grid=new Array(N*N).fill(-1);
+  for(let i=0;i<N*N;i++){ const r=Math.floor(i/N), c=i%N;
+    if(r===N-1 && c>=N-keep) continue;
+    S.grid[i]=(r+c)%GLASS.length; }
+  refreshHud();
+};
+// один «ход среднего игрока»: докупить самый дешёвый инструмент, иначе положить осколок
+window.__autoplayTick = () => {
+  if(phase==='card'){ collectPanel(false); return; }
+  if(phase==='stuck'){ freshGlass(); return; }
+  if(anyModal()){ document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open')); offData=null; }
+  const t=nextTool();
+  if(t && S.shards>=toolCost(t)){ buyTool(t.id); return; }
+  // средний игрок: из доступных осколков выбирает тот, что даёт спайку, иначе кладёт «куда влезет»
+  let best=null;
+  for(let k=0;k<3;k++){
+    const p=S.tray[k]; if(!p) continue;
+    const sh=SHAPES[p[0]];
+    for(let r=0;r<=N-sh.h;r++) for(let c=0;c<=N-sh.w;c++){
+      if(!canPlace(p[0],c,r)) continue;
+      // оценка: заполненность рядов/столбцов после укладки
+      const touched=new Set(); let score=0;
+      sh.c.forEach(([dx,dy])=>{ touched.add('r'+(r+dy)); touched.add('c'+(c+dx)); });
+      const snapshot=S.grid.slice();
+      sh.c.forEach(([dx,dy])=>{ snapshot[(r+dy)*N+(c+dx)]=p[1]; });
+      touched.forEach(key=>{
+        let cnt=0;
+        if(key[0]==='r'){ const rr=+key.slice(1); for(let i=0;i<N;i++) if(snapshot[rr*N+i]>=0) cnt++; }
+        else { const cc=+key.slice(1); for(let i=0;i<N;i++) if(snapshot[i*N+cc]>=0) cnt++; }
+        score += cnt===N? 100 : cnt*cnt*0.1;
+      });
+      score += (r+1)*0.2;                       // чуть предпочитает нижние ряды
+      if(!best || score>best.score) best={k,c,r,score};
+    }
+  }
+  if(best) placePiece(best.k, best.c, best.r, true);
+  else if(phase==='play') checkStuck();
+};
+
+// ---------- Boot ----------
+function signalReady(){
+  if(readySent || !ysdk) return; readySent=true;
+  try{ ysdk.features && ysdk.features.LoadingAPI && ysdk.features.LoadingAPI.ready(); }catch(e){}
+}
+function boot(raw){
+  if(booted) return; booted=true;
+  restore(raw);
+  const away=(Date.now()-S.time)/1000;
+  refillTray(false);
+  resize();
+  applyAway(away,'boot');          // досчёт офлайна до показа интерфейса
+  if(!anyTrayFits() && S.grid.some(v=>v>=0)) phase='stuck';
+  refreshHud();
+  if(phase==='stuck') queueModal('stuck');
+  if(dailyPending()) queueModal('daily');
+  onTap($("galleryBtn"), ()=>openModal('gallery'));
+  onTap($("galleryClose"), ()=>closeModal('gallery'));
+  $("gallery").addEventListener('click', e=>{ if(e.target.id==='gallery') closeModal('gallery'); });
+  onTap($("studioBtn"), ()=>openModal('studio'));
+  onTap($("studioClose"), ()=>closeModal('studio'));
+  $("studio").addEventListener('click', e=>{ if(e.target.id==='studio') closeModal('studio'); });
+  onTap($("langBtn"), toggleLang);
+  onTap($("boostBtn"), ()=>{ if(boostOn()){ toast(T("boostGot")); return; } showRewarded(startBoost); });
+  onTap($("winTake"), ()=>collectPanel(false));
+  onTap($("winX2"), ()=>showRewarded(()=>collectPanel(true)));
+  onTap($("stuckNew"), freshGlass);
+  onTap($("stuckSweep"), ()=>{ if(S.sweeps>0){ S.sweeps--; sweepTray(); } else showRewarded(sweepTray); });
+  onTap($("offTake"), ()=>offCollect(false));
+  onTap($("offX2"), ()=>showRewarded(()=>offCollect(true)));
+  onTap($("dayTake"), ()=>claimDaily(false));
+  onTap($("dayX2"), ()=>showRewarded(()=>claimDaily(true)));
+  document.documentElement.setAttribute("lang", lang());
+  if(!S.tutDone && S.lifetime<1){
+    setTimeout(()=>{ if(!S.tutDone && phase==='play' && !anyModal()) toast(T("tapHint")); }, 2500);
+  }
+  checkShortcut();
+  signalReady();                    // GameReady уходит до того, как интерфейс станет доступен
+  document.body.classList.add('ready');
+  persist(true);
+  startMusic();
+  requestAnimationFrame(frame);
+}
+(function initSDK(){
+  let localRaw=null; try{ localRaw=localStorage.getItem(SAVE_KEY); }catch(e){}
+  function start(){
+    if(window.YaGames && !window.__noSDK){
+      YaGames.init().then(sdk=>{
+        ysdk=sdk;
+        readPlatformLang();   // язык платформы читаем на каждом запуске, до первой отрисовки UI
+        if(booted) signalReady();   // SDK ответил позже страховочного boot() — GameReady всё равно уходит (§8.1)
+        try{ lb = sdk.leaderboards; }catch(e){}
+        return sdk.getPlayer({scopes:false}).then(p=>{player=p;return p.getData(["save"]);})
+          .then(d=>boot(d&&d.save?d.save:localRaw)).catch(()=>boot(localRaw));
+      }).catch(()=>boot(localRaw));
+      setTimeout(()=>{ boot(localRaw); signalReady(); },4000);   // страховка: SDK не ответил
+    } else boot(localRaw);
+  }
+  if(window.__noSDK || window.YaGames) start();
+  else window.__onSdkScriptDone = start;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+<style>
+  /* Параметризуемая карточка для обложки (800x470) и иконки (512x512).
+     Параметры через query: ?w=800&h=470&title=...&heroSvg=<encodeURIComponent(svg)>&sub=...&accent=%23F49E6D&bg=%23AFCF87&ink=%235B4636&mode=cover|icon
+     ВАЖНО: героя ЗАПРЕЩЕНО рисовать эмодзи. heroSvg — это готовая векторная SVG-разметка
+     (viewBox 0 0 100 100, плоские заливки + контур в стиле STYLE.md), URL-encoded строкой.
+     Без heroSvg рисуется нейтральная векторная заглушка-капля — не полагайся на неё,
+     всегда передавай свою heroSvg под тему игры. */
+  html,body{margin:0;padding:0}
+  #card{position:relative;overflow:hidden;font-family:'Nunito',system-ui,sans-serif;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  #hero{line-height:1;filter:drop-shadow(0 6px 0 rgba(0,0,0,.12))}
+  #hero svg{display:block}
+  #title{font-weight:900;color:var(--ink);letter-spacing:.5px;
+         -webkit-text-stroke:2px rgba(255,255,255,.6);paint-order:stroke fill}
+  #sub{font-weight:800;color:var(--ink);opacity:.8}
+  .plate{background:rgba(255,248,230,.92);border:6px solid var(--ink);border-radius:28px;
+         box-shadow:0 10px 0 rgba(0,0,0,.15);padding:22px 34px;margin-top:18px}
+  /* декоративные «холмы» снизу для узнаваемости серии */
+  .hill{position:absolute;bottom:-40%;left:-10%;width:120%;height:80%;border-radius:50%;
+        background:rgba(0,0,0,.06)}
+</style>
+</head>
+<body>
+<div id="card"></div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const w = +q.get('w')||800, h=+q.get('h')||470, mode=q.get('mode')||'cover';
+  const accent=q.get('accent')||'#F49E6D', bg=q.get('bg')||'#AFCF87', ink=q.get('ink')||'#5B4636';
+  const title=q.get('title')||'Игра', sub=q.get('sub')||'';
+  const heroSvgParam=q.get('heroSvg');
+  // Векторная заглушка (капля-силуэт), используется только если heroSvg не передали —
+  // НЕ эмодзи, но и не полноценный герой; всегда передавай реальную heroSvg под тему.
+  const fallbackSvg='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+    +'<circle cx="50" cy="52" r="34" fill="'+accent+'" stroke="'+ink+'" stroke-width="5"/>'
+    +'<circle cx="50" cy="52" r="34" fill="none" stroke="'+ink+'" stroke-width="5"/></svg>';
+  // q.get() уже декодирует query-параметр — повторный decodeURIComponent() здесь не нужен
+  // (и сломался бы, если SVG содержит символ '%', например в rgba()/градиентах).
+  const heroSvg = heroSvgParam || fallbackSvg;
+  document.documentElement.style.setProperty('--ink',ink);
+  const c=document.getElementById('card');
+  c.style.width=w+'px'; c.style.height=h+'px';
+  c.style.background='radial-gradient(120% 120% at 50% 20%, '+bg+' 0%, '+accent+' 160%)';
+  const heroSize = mode==='icon'? Math.round(h*0.5) : Math.round(h*0.34);
+  const titleSize= mode==='icon'? 0 : Math.round(h*0.13);
+  const hill=document.createElement('div'); hill.className='hill'; c.appendChild(hill);
+  const hero=document.createElement('div'); hero.id='hero'; hero.innerHTML=heroSvg;
+  hero.style.width=heroSize+'px'; hero.style.height=heroSize+'px'; c.appendChild(hero);
+  if(mode!=='icon'){
+    const plate=document.createElement('div'); plate.className='plate';
+    const t=document.createElement('div'); t.id='title'; t.textContent=title; t.style.fontSize=titleSize+'px';
+    plate.appendChild(t);
+    if(sub){ const s=document.createElement('div'); s.id='sub'; s.textContent=sub; s.style.fontSize=Math.round(titleSize*0.42)+'px'; s.style.marginTop='6px'; plate.appendChild(s); }
+    c.appendChild(plate);
+  }
+  window.__ready=true;
+</script>
+</body>
+</html>
