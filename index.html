@@ -147,7 +147,9 @@
   .day .dh{font-size:10px;color:#A8731E;font-weight:900}
   .day.done{background:#E3EFD6;opacity:.75}
   .day.now{background:linear-gradient(180deg,#FFE7A6,#F7C766);transform:translateY(-2px);box-shadow:0 3px 0 rgba(74,52,38,.25)}
-  .day.big{grid-column:span 2}
+  .day.d7{grid-column:span 2;background:linear-gradient(180deg,#FFF3D2,#FBE3A6)}
+  .day.d7.done{background:#E3EFD6}
+  .day.d7.now{background:linear-gradient(180deg,#FFE7A6,#F7C766)}
   #toast{position:absolute;left:50%;bottom:104px;transform:translateX(-50%) translateY(20px);
          background:var(--ink);color:#fff;font-weight:800;font-size:14px;padding:9px 16px;border-radius:99px;
          opacity:0;transition:.25s;pointer-events:none;z-index:8;text-align:center;max-width:86%}
@@ -942,7 +944,7 @@ function fillDaily(){
   $("dayNote").textContent=T("dayNote").replace("{n}", st);
   const G=$("dayGrid"); G.innerHTML="";
   for(let i=0;i<7;i++){
-    const d=document.createElement('div'); d.className="day"+(i<cur?" done":"")+(i===cur?" now":"")+(i===6?" big":"");
+    const d=document.createElement('div'); d.className="day"+(i<cur?" done":"")+(i===cur?" now":"")+(i===6?" d7":"");
     d.innerHTML='<div class="dn">'+T("dayN")+' '+(i+1)+'</div><div class="dv">+'+fmt(dayReward(i))+'</div>'
       +(daySweeps(i)? '<div class="dh">'+(daySweeps(i)===1?T("daySweep"):T("daySweep2"))+'</div>':'');
     G.appendChild(d);
